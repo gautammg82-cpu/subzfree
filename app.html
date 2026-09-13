@@ -115,6 +115,9 @@
       <div class="captik-captions-subhead">
         <span class="captik-subhead-title">CAPTIONS</span>
         <div class="captik-undo-redo-box">
+          <button class="captik-mini-btn" id="btn-convert-hinglish" title="Convert Hindi text to Hinglish (English letters)" style="font-weight:700;color:var(--black)">
+            🔤 Hinglish
+          </button>
           <button class="captik-mini-btn" id="btn-left-undo" title="Undo">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
             Undo
@@ -1304,8 +1307,9 @@
             SPOKEN LANGUAGE:
           </label>
           <select id="whisper-lang-select" class="modal-input" style="width:100%;box-sizing:border-box;background:#f9fafb;border:1.5px solid var(--border-color);border-radius:8px;padding:10px 12px;color:var(--black);font-size:12.5px;cursor:pointer;margin-bottom:0">
-            <option value="auto" selected>🌐 Auto Detect Language (Hindi / English / Hinglish / Punjabi...)</option>
-            <option value="hi">🇮🇳 Hindi (हिंदी)</option>
+            <option value="hinglish" selected>🇮🇳 Hinglish (Hindi words in English text — "Namaste dosto")</option>
+            <option value="auto">🌐 Auto Detect Language (Auto)</option>
+            <option value="hi">🇮🇳 Pure Hindi (हिंदी लिपि — "नमस्ते दोस्तों")</option>
             <option value="en">🇬🇧 English</option>
             <option value="pa">🌾 Punjabi (ਪੰਜਾਬੀ)</option>
             <option value="ta">🌴 Tamil (தமிழ்)</option>
@@ -1381,11 +1385,11 @@
 <div class="toast" id="toast" role="alert" aria-live="polite"></div>
 
 <!-- ── Scripts ── -->
-<script src="js/captions.js"></script>
-<script src="js/transcribe.js"></script>
-<script src="js/adgate.js"></script>
-<script src="js/export.js"></script>
-<script src="js/editor.js"></script>
+<script src="js/captions.js?v=hinglish_v4" charset="utf-8"></script>
+<script src="js/transcribe.js?v=hinglish_v4" charset="utf-8"></script>
+<script src="js/adgate.js?v=hinglish_v4" charset="utf-8"></script>
+<script src="js/export.js?v=hinglish_v4" charset="utf-8"></script>
+<script src="js/editor.js?v=hinglish_v4" charset="utf-8"></script>
 
 </body>
 </html>
