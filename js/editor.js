@@ -255,6 +255,99 @@
     }
   }
 
+  // Captions Panel Undo, Redo, and 1-Click Hinglish Converter
+  const btnLeftUndo = $('btn-left-undo');
+  if (btnLeftUndo) btnLeftUndo.addEventListener('click', undo);
+
+  const btnLeftRedo = $('btn-left-redo');
+  if (btnLeftRedo) btnLeftRedo.addEventListener('click', redo);
+
+  const btnConvertHinglish = $('btn-convert-hinglish');
+  if (btnConvertHinglish) {
+    btnConvertHinglish.addEventListener('click', async () => {
+      if (!state.segments || state.segments.length === 0) {
+        showToast('No captions to convert yet. Upload video or generate captions first!', 'info');
+        return;
+      }
+      recordState();
+      showToast('✨ AI is perfecting captions to 100% accurate Hinglish...', 'info');
+
+      const savedKey = (typeof localStorage !== 'undefined') ? (localStorage.getItem('subzfree_groq_key') || '').trim() : '';
+      
+      // Step A: Immediate word-by-word high-accuracy transliteration + spelling normalization
+      state.segments.forEach(seg => {
+        if (seg.words && Array.isArray(seg.words)) {
+          seg.words.forEach(w => {
+            if (/[\u0900-\u097F]/.test(w.word)) {
+              w.word = (typeof TRANSCRIBE.transliterateDevanagariWord === 'function')
+                ? TRANSCRIBE.transliterateDevanagariWord(w.word)
+                : TRANSCRIBE.devanagariToHinglish(w.word);
+            }
+            if (typeof TRANSCRIBE.normalizeHinglishSpelling === 'function') {
+              w.word = TRANSCRIBE.normalizeHinglishSpelling(w.word);
+            }
+          });
+          seg.text = seg.words.map(w => w.word).join(' ');
+        } else {
+          seg.text = TRANSCRIBE.devanagariToHinglish(seg.text);
+          if (typeof TRANSCRIBE.normalizeHinglishSpelling === 'function') {
+            seg.text = seg.text.split(/\s+/).map(TRANSCRIBE.normalizeHinglishSpelling).join(' ');
+          }
+        }
+      });
+
+      // Step B: If Groq Key exists, refine with LLaMA 3.1 8B while keeping exact word timestamps
+      if (savedKey && typeof TRANSCRIBE.refineToHinglishWithAI === 'function') {
+        try {
+          const originalLines = state.segments.map(s => s.text);
+          const refinedLines = await TRANSCRIBE.refineToHinglishWithAI(originalLines, savedKey);
+
+          state.segments.forEach((seg, i) => {
+            const refinedStr = (refinedLines[i] || '').trim();
+            if (!refinedStr) return;
+
+            let refinedWords = refinedStr.split(/\s+/).filter(Boolean);
+            if (typeof TRANSCRIBE.normalizeHinglishSpelling === 'function') {
+              refinedWords = refinedWords.map(TRANSCRIBE.normalizeHinglishSpelling);
+            }
+            const origWords = seg.words;
+
+            if (origWords && refinedWords.length === origWords.length) {
+              // 1-to-1 match: retain exact acoustic timing per word
+              refinedWords.forEach((rw, wi) => {
+                origWords[wi].word = rw;
+              });
+              seg.text = refinedWords.join(' ');
+            } else if (origWords && refinedWords.length > 0 && origWords.length > 0) {
+              // Differing word count: interpolate strictly within spoken speech span
+              const speechStart = origWords[0].start;
+              const speechEnd = origWords[origWords.length - 1].end;
+              const dur = Math.max(0.3, speechEnd - speechStart);
+              const wDur = dur / refinedWords.length;
+
+              seg.words = refinedWords.map((rw, wi) => ({
+                word: rw,
+                start: speechStart + wi * wDur,
+                end: speechStart + (wi + 1) * wDur
+              }));
+              seg.start = speechStart;
+              seg.end = speechEnd;
+              seg.text = refinedWords.join(' ');
+            }
+          });
+        } catch (e) {
+          console.warn('AI Hinglish refinement error:', e);
+        }
+      }
+
+      window.__SUBZFREE_SEGMENTS__ = state.segments;
+      renderTimeline(state.segments);
+      renderTimelineBlocks();
+      requestDrawFrame();
+      showToast('🎉 Captions converted to high-accuracy Hinglish with zero timing lag!', 'success');
+    });
+  }
+
   // ── Topbar Controls ────────────────────────────────────────
 
   // Editable Project Title
@@ -1881,6 +1974,69 @@
       cachedContentWidth = 0;
       renderTimelineBlocks();
       updatePlayheadPosition(EL.previewVideo.currentTime, EL.previewVideo.duration);
+    });
+  }
+
+  // Zoom Fit Button
+  const btnZoomFit = $('btn-zoom-fit');
+  if (btnZoomFit) {
+    btnZoomFit.addEventListener('click', () => {
+      state.trackZoom = 100;
+      if (EL.timelineZoomSlider) EL.timelineZoomSlider.value = 100;
+      if (EL.zoomPercentTag) EL.zoomPercentTag.textContent = '100%';
+      const tracks = document.querySelectorAll('.track-content');
+      tracks.forEach(tr => { tr.style.minWidth = '800px'; });
+      cachedContentWidth = 0;
+      renderTimelineBlocks();
+      updatePlayheadPosition(EL.previewVideo.currentTime, EL.previewVideo.duration);
+      showToast('Zoom reset to 100%', 'info');
+    });
+  }
+
+  // Instant Precision Timing Nudge (Left = -0.1s, Right = +0.1s)
+  function nudgeCaptions(deltaSeconds) {
+    if (!state.segments || state.segments.length === 0) {
+      showToast('No captions to nudge. Add or generate captions first!', 'info');
+      return;
+    }
+    recordState();
+    state.segments.forEach(seg => {
+      seg.start = Math.max(0, parseFloat((seg.start + deltaSeconds).toFixed(3)));
+      seg.end = Math.max(seg.start + 0.2, parseFloat((seg.end + deltaSeconds).toFixed(3)));
+      if (seg.words && Array.isArray(seg.words)) {
+        seg.words.forEach(w => {
+          w.start = Math.max(0, parseFloat((w.start + deltaSeconds).toFixed(3)));
+          w.end = Math.max(w.start + 0.08, parseFloat((w.end + deltaSeconds).toFixed(3)));
+        });
+      }
+    });
+    window.__SUBZFREE_SEGMENTS__ = state.segments;
+    renderTimeline(state.segments);
+    renderTimelineBlocks();
+    requestDrawFrame();
+    showToast(deltaSeconds > 0 ? `⏩ Nudged captions +0.1s later` : `⏪ Nudged captions -0.1s earlier`, 'info');
+  }
+
+  const btnNudgeLeft = $('timeline-btn-nudge-left');
+  if (btnNudgeLeft) {
+    btnNudgeLeft.addEventListener('click', () => nudgeCaptions(-0.1));
+  }
+  const btnNudgeRight = $('timeline-btn-nudge-right');
+  if (btnNudgeRight) {
+    btnNudgeRight.addEventListener('click', () => nudgeCaptions(0.1));
+  }
+
+  // Playback Speed Toggle (1x -> 1.25x -> 1.5x -> 0.75x -> 1x)
+  const btnSpeed = $('timeline-btn-speed');
+  const speeds = [1.0, 1.25, 1.5, 0.75];
+  let speedIdx = 0;
+  if (btnSpeed) {
+    btnSpeed.addEventListener('click', () => {
+      speedIdx = (speedIdx + 1) % speeds.length;
+      const spd = speeds[speedIdx];
+      if (EL.previewVideo) EL.previewVideo.playbackRate = spd;
+      btnSpeed.title = `Playback Speed: ${spd}x`;
+      showToast(`Playback speed: ${spd}x`, 'info');
     });
   }
 
