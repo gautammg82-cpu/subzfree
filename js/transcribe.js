@@ -818,7 +818,6 @@ MANDATORY RULES:
         formData.append('timestamp_granularities[]', 'word');
         formData.append('timestamp_granularities[]', 'segment');
         formData.append('temperature', '0');
-        formData.append('condition_on_previous_text', 'false');
 
         if (requestedLang === 'hinglish') {
           formData.append('language', 'hi');
@@ -842,6 +841,12 @@ MANDATORY RULES:
             headers: { 'Authorization': `Bearer ${key}` },
             body: formData
           });
+        }
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          const errMsg = errData.error?.message || `Whisper API error (${res.status})`;
+          throw new Error(errMsg);
         }
 
         if (res.ok) {
@@ -898,7 +903,6 @@ MANDATORY RULES:
       formData.append('timestamp_granularities[]', 'word');
       formData.append('timestamp_granularities[]', 'segment');
       formData.append('temperature', '0');
-      formData.append('condition_on_previous_text', 'false');
 
       if (requestedLang === 'hinglish') {
         formData.append('language', 'hi');
