@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SubzFree Editor — AI Caption Generator & Video Editor</title>
+  <meta name="robots" content="noindex"/>
+  <link rel="stylesheet" href="styles/global.css"/>
+  <link rel="stylesheet" href="styles/editor.css"/>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ════════════════════════════════════════════════════════════
+       1. TOP BAR (Captik Style)
+       ════════════════════════════════════════════════════════════ -->
+  <header class="app-topbar">
+    <div class="topbar-left">
+      <a href="index.html" class="app-logo">
+        <svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="28" height="28" rx="7" fill="#0a0a0a"/>
+          <!-- Top subtitle bar — wider -->
+          <rect x="5" y="9" width="18" height="3.5" rx="1.75" fill="white"/>
+          <!-- Bottom subtitle bar — slightly narrower, centered -->
+          <rect x="7" y="16" width="14" height="3.5" rx="1.75" fill="white"/>
+        </svg>
+        <span>SubzFree</span>
+      </a>
+      <div class="project-title-wrapper">
+        <input type="text" id="project-title-input" value="vidssave.com INDIA'S GOT LAT..." class="project-title-input" title="Click to rename project"/>
+        <span class="project-title-pencil">✏️</span>
+      </div>
+      <div class="resolution-toggle">
+        <button class="res-btn active" data-res="1080">1080p</button>
+        <button class="res-btn" data-res="720">720p</button>
+      </div>
+    </div>
+
+    <!-- Center: Clean spacing matching Captik -->
+    <div class="topbar-center">
+      <span class="topbar-status-text" id="topbar-status" style="display:none"></span>
+    </div>
+
+    <!-- Right: Duration, Generate Captions (Replaced Watermark), Save, SRT, Help, Export -->
+    <div class="topbar-right">
+      <div class="duration-pill" id="topbar-duration-pill">
+        <span class="pill-dot"></span>
+        <span id="topbar-duration">0/2 min</span>
+      </div>
+      <button class="btn-topbar-generate" id="btn-topbar-generate" title="Generate AI Captions">
+        <span class="btn-gen-sparkle">✨</span>
+        <span class="btn-gen-text">Generate Captions</span>
+      </button>
+      <button class="btn-top-util" id="btn-save-project" title="Save Project (Browser)">
+        <span>💾 Save</span>
+      </button>
+      <button class="btn-top-util" id="btn-download-srt" title="Download Subtitles as .SRT file directly">
+        <span>📄 SRT</span>
+      </button>
+      <button class="btn-top-help" id="btn-help-top" title="Keyboard Shortcuts &amp; Help">
+        <span>❓</span>
+      </button>
+      <button class="btn-export-primary" id="btn-download-top" disabled>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Export</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ════════════════════════════════════════════════════════════
+       2. MAIN WORKSPACE (Skinny Rail + Captions + Preview + Templates)
+       ════════════════════════════════════════════════════════════ -->
+  <div class="app-workspace">
+
+    <!-- ── 2A. Skinny Left Rail (Captik Exact 52px) ── -->
+    <nav class="icon-rail" aria-label="Editor navigation">
+      <button class="rail-btn active" id="rail-btn-captions" title="Captions &amp; Subtitles">
+        <span class="subzfree-t-badge">T</span>
+      </button>
+      <button class="rail-btn" id="rail-btn-transcribe" title="Magic &amp; AI Audio">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+      </button>
+      <button class="rail-btn" id="rail-btn-media" title="Video Clapper">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect width="20" height="20" x="2" y="2" rx="4"/><path d="m2 8 4-4"/><path d="m8 8 4-4"/><path d="m14 8 4-4"/><path d="m20 8 2-2"/><path d="M2 8h20"/></svg>
+      </button>
+    </nav>
+
+    <!-- ── 2B. Left Panel: CAPTIONS (Captik Exact Layout) ── -->
+    <aside class="left-captions-panel" id="left-captions-panel">
+
+      <!-- Header: CAPTIONS -->
+      <div class="captik-panel-header">
+        <span class="captik-panel-title">CAPTIONS</span>
+      </div>
+
+      <!-- LINES: [1 Line]  [2 Lines] -->
+      <div class="captik-lines-row">
+        <span class="captik-row-label">LINES</span>
+        <div class="captik-lines-toggle">
+          <button class="captik-line-pill active" id="btn-left-line-mode-1" data-mode="1">1 Line</button>
+          <button class="captik-line-pill" id="btn-left-line-mode-2" data-mode="2">2 Lines</button>
+        </div>
+      </div>
+
+      <!-- CAPTION SETTINGS ⌄ -->
+      <div class="captik-settings-row" id="btn-toggle-left-settings">
+        <span class="settings-row-left">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          CAPTION SETTINGS
+        </span>
+        <span class="settings-arrow">⌄</span>
+      </div>
+
+      <!-- CAPTIONS   ↺ Undo   ↻ Redo -->
+      <div class="captik-captions-subhead">
+        <span class="captik-subhead-title">CAPTIONS</span>
+        <div class="captik-undo-redo-box">
+          <button class="captik-mini-btn" id="btn-convert-hinglish" title="Convert Hindi text to Hinglish (English letters)" style="font-weight:700;color:var(--black)">
+            🔤 Hinglish
+          </button>
+          <button class="captik-mini-btn" id="btn-left-undo" title="Undo">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+            Undo
+          </button>
+          <button class="captik-mini-btn" id="btn-left-redo" title="Redo">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>
+            Redo
+          </button>
+        </div>
+      </div>
+
+      <!-- Captik Empty Text (Shown when no video loaded) -->
+      <div class="captik-empty-label" id="captik-empty-label">
+        Upload a video to see captions.
+      </div>
+
+      <!-- Vertical Scrollable Captions List in Left Panel -->
+      <div class="left-captions-scroll" id="timeline-scroll">
+        <!-- JS fills caption block cards vertically here -->
+      </div>
+
+      <!-- Action Box: Generate & Upload Tools (Accessible via UI buttons) -->
+      <div class="captik-action-area" style="display:none">
+        <button class="btn-generate-main" id="btn-generate">
+          <span class="btn-gen-sparkle">✨</span>
+          <span class="btn-gen-text">Generate Captions</span>
+        </button>
+
+        <div class="upload-zone" id="upload-zone" style="margin-top:10px">
+          <input type="file" id="file-input" accept="video/*" aria-label="Upload video"/>
+          <div class="upload-compact-content">
+            <span class="upload-icon-small">📁</span>
+            <span class="upload-compact-text">Choose or Drop Video</span>
+          </div>
+        </div>
+
+        <div id="file-chip-area" style="display:none" class="file-chip">
+          <span class="file-chip-icon">🎬</span>
+          <span class="file-chip-name" id="file-name">video.mp4</span>
+          <button class="file-chip-remove" id="file-remove" aria-label="Remove video">✕</button>
+        </div>
+
+        <div class="lang-select-wrapper" style="margin-top:10px">
+          <label class="lang-select-label" for="lang-select">SPEECH LANGUAGE</label>
+          <select class="lang-select" id="lang-select" aria-label="Select language">
+            <option value="auto" selected>🌐 Auto Detect Language</option>
+            <option value="hinglish">🇮🇳 Hinglish (Hindi + English)</option>
+            <option value="hi">🇮🇳 Hindi (हिंदी)</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="song">🎵 Song &amp; Music Lyrics</option>
+            <option value="ta">🌴 Tamil (தமிழ்)</option>
+            <option value="te">🌿 Telugu (తెలుగు)</option>
+            <option value="mr">🌸 Marathi (मराठी)</option>
+            <option value="bn">🎋 Bengali (বাংলা)</option>
+            <option value="pa">🌾 Punjabi (ਪੰਜਾਬੀ)</option>
+            <option value="gu">🏛️ Gujarati (ગુજરાતી)</option>
+          </select>
+        </div>
+
+        <button class="btn-paste-script-prominent" id="btn-open-paste-modal" style="margin-top:8px">
+          <span>📝</span>
+          <span>Paste Lyrics / Script</span>
+        </button>
+
+        <div id="generating-area" style="display:none" class="generating-state">
+          <div class="spinner"></div>
+          <div class="generating-text" id="gen-text">Analyzing audio beats...</div>
+          <div class="generating-step" id="gen-step">Detecting speech</div>
+          <div class="progress-bar" style="margin-top:8px">
+            <div class="progress-fill" id="gen-progress" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ── 2C. Center Preview Area ── -->
+    <main class="center-area" id="center-preview-area">
+      <!-- Preview Header: Aspect Ratios & Tools -->
+      <div class="preview-toolbar">
+        <span class="preview-toolbar-title">PREVIEW</span>
+        <div class="aspect-ratio-selector">
+          <button class="aspect-btn active" data-ratio="original">Original</button>
+          <button class="aspect-btn" data-ratio="9:16">9:16</button>
+          <button class="aspect-btn" data-ratio="16:9">16:9</button>
+          <button class="aspect-btn" data-ratio="1:1">1:1</button>
+          <button class="aspect-btn" data-ratio="4:5">4:5</button>
+        </div>
+        <div class="preview-toolbar-right">
+          <span class="zoom-badge" id="preview-zoom-badge">100%</span>
+          <button class="btn-fullscreen-toggle" id="btn-fullscreen" title="Fullscreen Preview">⛶</button>
+        </div>
+      </div>
+
+      <!-- Preview Viewport -->
+      <div class="preview-wrap" id="preview-wrap">
+        <!-- Empty state with prominent action buttons -->
+        <div class="preview-empty" id="preview-empty">
+          <div class="preview-empty-icon">C</div>
+          <div class="preview-empty-text">Select Video to Generate Captions</div>
+          <div class="preview-empty-sub">Fast local AI speech recognition • 50+ viral animated templates</div>
+          <div class="preview-empty-actions">
+            <button class="btn-hero-action" id="btn-empty-upload">
+              <span>📁</span> Choose Video File
+            </button>
+            <button class="btn-hero-secondary" id="btn-empty-script">
+              <span>📝</span> Paste Exact Script / Lyrics
+            </button>
+            <button class="btn-hero-secondary" id="btn-empty-demo">
+              <span>✨</span> Load Sample Captions
+            </button>
+          </div>
+        </div>
+
+        <!-- Video + Overlay Canvas -->
+        <div class="video-container" id="video-container" style="display:none">
+          <video class="preview-video" id="preview-video" playsinline></video>
+          <canvas class="preview-canvas" id="preview-canvas" title="Tap caption to change size, word &amp; position"></canvas>
+
+          <!-- Floating Caption Toolbar on Tap -->
+          <div class="caption-toolbar" id="caption-toolbar" style="display:none">
+            <div class="caption-toolbar-title">
+              <span>✏️ Caption Settings &amp; Word Fix</span>
+              <button class="caption-toolbar-close" id="toolbar-close" title="Close">✕</button>
+            </div>
+
+            <!-- Current Caption Text Input to Fix Wrong Word instantly -->
+            <div class="caption-toolbar-row" id="toolbar-text-row">
+              <span class="caption-toolbar-label">Text</span>
+              <div style="display:flex;flex:1;gap:6px">
+                <input type="text" class="caption-toolbar-text-input" id="toolbar-caption-text" placeholder="Type correct words here...">
+                <button class="btn btn-sm btn-primary" id="btn-toolbar-save-text">Save</button>
+              </div>
+            </div>
+
+            <div class="caption-toolbar-row">
+              <span class="caption-toolbar-label">Size</span>
+              <div class="caption-size-pills">
+                <button class="size-pill" data-size="0.75">S</button>
+                <button class="size-pill active" data-size="1.0">M</button>
+                <button class="size-pill" data-size="1.3">L</button>
+                <button class="size-pill" data-size="1.6">XL</button>
+              </div>
+              <input type="range" class="caption-size-slider" id="caption-size-slider" min="0.5" max="2.2" step="0.05" value="1.0" title="Custom scale">
+            </div>
+            <div class="caption-toolbar-row">
+              <span class="caption-toolbar-label">Position</span>
+              <div class="caption-pos-pills">
+                <button class="pos-pill" data-pos="-0.45">Top</button>
+                <button class="pos-pill" data-pos="-0.20">Mid</button>
+                <button class="pos-pill active" data-pos="0">Bottom</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video Controls Bar (Permanently hidden - transport is in timeline bar) -->
+      <div class="video-controls" id="video-controls" style="display:none !important">
+        <button class="ctrl-btn" id="btn-play" aria-label="Play/Pause">
+          <svg id="play-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9V3z"/></svg>
+        </button>
+        <span class="time-display" id="time-display">0:00 / 0:00</span>
+        <input type="range" class="video-seek" id="video-seek" min="0" max="100" value="0" step="0.1" aria-label="Seek"/>
+        <span style="font-size:12px;color:var(--text-muted)" id="style-label">Style: Captik Glow</span>
+      </div>
+    </main>
+
+    <!-- ── 2D. Right Sidebar: DEDICATED TEMPLATES & TEXT PANEL (Captik Style) ── -->
+    <aside class="right-templates-sidebar" id="right-templates-sidebar">
+
+      <!-- Top Tabs: Text | Templates (Captik 1:1) -->
+      <div class="templates-sidebar-tabs">
+        <button class="tab-btn" id="tab-btn-text" data-tab="text">Text</button>
+        <button class="tab-btn active" id="tab-btn-templates" data-tab="templates">Templates</button>
+      </div>
+
+      <!-- TAB 1: TEMPLATES (Active by Default) -->
+      <div class="tab-content active" id="tab-content-templates">
+
+        <!-- Segmented Switch: Built-in Templates vs My Presets -->
+        <div class="presets-segmented-switch">
+          <button class="preset-pill active" id="pill-built-in">Built-in Templates</button>
+          <button class="preset-pill" id="pill-my-presets">My Presets</button>
+        </div>
+
+        <!-- Search Bar & Save Preset Row -->
+        <div class="template-search-row">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="style-search" placeholder="Find a template..." class="template-search-input" />
+          </div>
+          <button class="btn-save-preset" id="btn-save-preset" title="Save current caption style as your preset">
+            <span>💾 Save Preset</span>
+          </button>
+        </div>
+
+        <!-- Category Filter Pills (Captik Style) -->
+        <div class="style-category-tabs" id="style-category-tabs">
+          <button class="cat-pill active" data-cat="all">All (58)</button>
+          <button class="cat-pill" data-cat="trending">🔥 Trending</button>
+          <button class="cat-pill" data-cat="most-used">⭐ Most Used</button>
+          <button class="cat-pill" data-cat="creators">👑 Creators</button>
+          <button class="cat-pill" data-cat="new">✨ New</button>
+        </div>
+
+        <!-- Section Title -->
+        <div class="templates-section-title">
+          <span>DYNAMIC CAPTIONS</span>
+          <span class="count-badge" id="style-count-badge">58</span>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════
+             LARGE HIGH-FIDELITY TEMPLATE CARDS GRID
+             ════════════════════════════════════════════════════════ -->
+        <div class="templates-grid" id="style-picker">
+
+          <!-- 1. CAPTIK GLOW (Radioactive Neon - Signature) -->
+          <div class="template-card active" data-style="captik-glow" data-cat="trending,most-used,new" title="Captik Glow (Signature Neon)">
+            <div class="card-preview" style="background:#060806">
+              <div class="preview-sub">the quick</div>
+              <div class="preview-hero" style="color:#A6FF00;text-shadow:0 0 10px #A6FF00,0 0 20px rgba(166,255,0,0.7)">BROWN</div>
+              <div class="preview-sub">fox jumps</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Captik Glow</div>
+              <span class="card-badge badge-popular">Popular</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Glow</span>
+              <span class="tag-pill">Viral</span>
+            </div>
+          </div>
+
+          <!-- 2. CAPTIK SHADOW (Metallic Silver Drop) -->
+          <div class="template-card" data-style="captik-shadow" data-cat="trending,new" title="Captik Shadow (Metallic Silver)">
+            <div class="card-preview" style="background:#08080a">
+              <div class="preview-sub">the quick</div>
+              <div class="preview-hero" style="background:linear-gradient(180deg,#fff,#999);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 3px 2px #000)">BROWN</div>
+              <div class="preview-sub">fox jumps</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Captik Shadow</div>
+              <span class="card-badge badge-new">New</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Metallic</span>
+              <span class="tag-pill">Bold</span>
+            </div>
+          </div>
+
+          <!-- 3. CAPTIK ORIGINAL (Signature Lime Yellow) -->
+          <div class="template-card" data-style="captik" data-cat="trending,most-used" title="Captik Original">
+            <div class="card-preview" style="background:#07070a">
+              <div class="preview-sub">the quick</div>
+              <div class="preview-hero" style="color:#D6FF00;text-shadow:2px 2px #000">BROWN</div>
+              <div class="preview-sub">fox jumps</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Captik Classic</div>
+              <span class="card-badge badge-trending">Trending</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Lime</span>
+              <span class="tag-pill">Clean</span>
+            </div>
+          </div>
+
+          <!-- 4. HORMOZI (Bold Yellow Box) -->
+          <div class="template-card" data-style="hormozi" data-cat="trending,most-used,creators" title="Hormozi Classic">
+            <div class="card-preview" style="background:#050508">
+              <div class="preview-sub">YOU MUST</div>
+              <div class="preview-hero" style="color:#FFD700;font-weight:900;text-shadow:2px 2px 0 #000">FOCUS</div>
+              <div class="preview-sub">RIGHT NOW</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Hormozi</div>
+              <span class="card-badge badge-popular">Popular</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Yellow</span>
+              <span class="tag-pill">Bold</span>
+            </div>
+          </div>
+
+          <!-- 5. VELOCITY FLASH (CapCut Reels Neon Flash) -->
+          <div class="template-card" data-style="velocity-flash" data-cat="trending,new,most-used" title="Velocity Flash">
+            <div class="card-preview" style="background:#03070d">
+              <div class="preview-sub" style="color:#00F5FF">⚡ FLASH</div>
+              <div class="preview-hero" style="color:#00F5FF;text-shadow:0 0 10px #00F5FF,0 0 20px #fff">VELOCITY</div>
+              <div class="preview-sub">REELS POP</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Velocity Flash</div>
+              <span class="card-badge badge-new">New</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Cyan</span>
+              <span class="tag-pill">Flash</span>
+            </div>
+          </div>
+
+          <!-- 6. SUBMAGIC KARAOKE (Cyan to Purple Gradient) -->
+          <div class="template-card" data-style="submagic-karaoke" data-cat="trending,new,most-used" title="Submagic Karaoke">
+            <div class="card-preview" style="background:#090610">
+              <div class="preview-sub">the dynamic</div>
+              <div class="preview-hero" style="background:linear-gradient(90deg,#00F5FF,#7B61FF,#FF2E93);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 6px rgba(123,97,255,0.8))">SUBMAGIC</div>
+              <div class="preview-sub">gradient pop</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Submagic 🌈</div>
+              <span class="card-badge badge-popular">Popular</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Gradient</span>
+              <span class="tag-pill">Viral</span>
+            </div>
+          </div>
+
+          <!-- 7. LUKE BELMAR (24K Gold Luxury) -->
+          <div class="template-card" data-style="luke-belmar" data-cat="trending,creators,new" title="Luke Belmar Luxury 24K Gold">
+            <div class="card-preview" style="background:#09090b">
+              <div class="preview-sub" style="letter-spacing:0.1em">CAPITAL</div>
+              <div class="preview-hero" style="color:#FFD54F;text-shadow:0 0 8px rgba(255,193,7,0.8);border-bottom:2px solid #FFC107">THEORY</div>
+              <div class="preview-sub">MINIMALIST</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Luke Belmar 👑</div>
+              <span class="card-badge badge-popular">Luxury</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Gold</span>
+              <span class="tag-pill">Underline</span>
+            </div>
+          </div>
+
+          <!-- 8. MRBEAST 2 (Viral Beast Mode) -->
+          <div class="template-card" data-style="mrbeast-2" data-cat="trending,most-used,creators" title="MrBeast 2">
+            <div class="card-preview" style="background:#0b0c16">
+              <div class="preview-sub">I GAVE AWAY</div>
+              <div class="preview-hero" style="color:#FFD700;text-shadow:-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 10px rgba(255,215,0,0.8)">$1,000,000</div>
+              <div class="preview-sub">TO A STRANGER</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">MrBeast 2</div>
+              <span class="card-badge badge-popular">Beast</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Yellow</span>
+              <span class="tag-pill">Stroke</span>
+            </div>
+          </div>
+
+          <!-- 9. ALI ABDAAL (Productivity Pill) -->
+          <div class="template-card" data-style="ali-abdaal" data-cat="trending,creators,most-used" title="Ali Abdaal">
+            <div class="card-preview" style="background:#0e1017">
+              <div style="background:#1e222d;border:1px solid rgba(255,255,255,0.1);border-radius:100px;padding:3px 10px;display:flex;align-items:center;gap:4px">
+                <span style="font-size:8px;color:#8892b0">how to</span>
+                <span style="background:#fff;color:#0a0b10;font-weight:900;padding:2px 6px;border-radius:6px;font-size:9px">FOCUS</span>
+              </div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Ali Abdaal</div>
+              <span class="card-badge badge-trending">Trending</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Clean</span>
+              <span class="tag-pill">Pill</span>
+            </div>
+          </div>
+
+          <!-- 10. BUBBLE STYLE (Emerald Rounded Pill) -->
+          <div class="template-card" data-style="bubble-style" data-cat="trending,most-used" title="Bubble Style">
+            <div class="card-preview" style="background:#0a0c10">
+              <div style="display:flex;align-items:center;gap:4px">
+                <span style="font-size:8px;color:#aaa">the</span>
+                <span style="background:#2BDC96;color:#041a10;font-weight:900;padding:3px 8px;border-radius:8px;font-size:10px">GREEN</span>
+                <span style="font-size:8px;color:#aaa">bubble</span>
+              </div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Bubble Emerald</div>
+              <span class="card-badge badge-popular">Popular</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Emerald</span>
+              <span class="tag-pill">Pill</span>
+            </div>
+          </div>
+
+          <!-- 11. DEVIN JATHO (Neon Magenta Bold) -->
+          <div class="template-card" data-style="devin-jatho" data-cat="trending,creators" title="Devin Jatho">
+            <div class="card-preview" style="background:#0A0A18">
+              <div class="preview-sub">LEVEL UP YOUR</div>
+              <div class="preview-hero" style="color:#DD55FF;text-shadow:0 0 8px rgba(221,85,255,0.8)">CONTENT</div>
+              <div class="preview-sub">TODAY</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Devin Jatho</div>
+              <span class="card-badge badge-new">New</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Magenta</span>
+              <span class="tag-pill">Glow</span>
+            </div>
+          </div>
+
+          <!-- 12. DELHI (Spotlight Aura) -->
+          <div class="template-card" data-style="delhi" data-cat="trending,most-used" title="Delhi Spotlight Aura">
+            <div class="card-preview" style="background:#0a0a0d">
+              <div style="font-size:8px;color:#889;display:flex;align-items:center;gap:4px">
+                the <span style="font-family:'Playfair Display',serif;font-style:italic;font-size:11px;color:#fff;text-shadow:0 0 10px rgba(255,255,255,0.9),0 0 16px rgba(160,210,255,0.7)">quick</span> fox
+              </div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Delhi ✨</div>
+              <span class="card-badge badge-trending">Trending</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Serif</span>
+              <span class="tag-pill">Aura</span>
+            </div>
+          </div>
+
+          <!-- 13. BLOCKBUSTER (Hollywood Kinetic Red) -->
+          <div class="template-card" data-style="blockbuster" data-cat="trending,new" title="Blockbuster Cinematic">
+            <div class="card-preview" style="background:#07070a">
+              <div class="preview-hero" style="font-size:12px;color:#FF2438;text-shadow:0 0 8px rgba(255,36,56,0.9)">NEXT BIG</div>
+              <div style="font-family:'Caveat',cursive;font-size:13px;color:#fff;text-shadow:0 0 4px #FF7828">thing</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Blockbuster</div>
+              <span class="card-badge badge-new">Cinematic</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Red</span>
+              <span class="tag-pill">Kinetic</span>
+            </div>
+          </div>
+
+          <!-- 14. BIG REVEAL (Headline Glow) -->
+          <div class="template-card" data-style="big-reveal" data-cat="trending,creators" title="Big Reveal">
+            <div class="card-preview" style="background:#000">
+              <div class="preview-hero" style="font-size:14px;color:#FFD700;line-height:1">HI GUYS</div>
+              <div class="preview-sub">watch till end</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Big Reveal</div>
+              <span class="card-badge badge-popular">Popular</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Headline</span>
+              <span class="tag-pill">Gold</span>
+            </div>
+          </div>
+
+          <!-- 15. CLEAN MOTION (One Word Pulse) -->
+          <div class="template-card" data-style="clean-motion" data-cat="trending,most-used" title="Clean Motion">
+            <div class="card-preview" style="background:#08080c">
+              <div class="preview-hero" style="color:#fff;text-shadow:1px 0 #FF1E50, -1px 0 #00DCFF">BROWN</div>
+              <div class="preview-sub">one word pop</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Clean Motion</div>
+              <span class="card-badge badge-trending">Trending</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">1-Word</span>
+              <span class="tag-pill">Anaglyph</span>
+            </div>
+          </div>
+
+          <!-- 16. SWISS (Modernist Editorial) -->
+          <div class="template-card" data-style="swiss" data-cat="trending,new" title="Swiss Editorial">
+            <div class="card-preview" style="background:#08080a">
+              <div style="font-size:10px;font-weight:900;color:#fff;text-shadow:1px 0 #FF1E50, -1px 0 #00DCFF">FOCUS</div>
+              <div style="font-size:11px;font-weight:900;color:#FFD700">DEEPLY</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Swiss Editorial</div>
+              <span class="card-badge badge-new">New</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Modern</span>
+              <span class="tag-pill">Dual</span>
+            </div>
+          </div>
+
+          <!-- 17. HORMOZI GREEN (Lime Power) -->
+          <div class="template-card" data-style="hormozi-green" data-cat="creators,trending" title="Hormozi Green">
+            <div class="card-preview" style="background:#080d08">
+              <div class="preview-sub" style="color:#7CFC00">THE BEST</div>
+              <div class="preview-hero" style="color:#7CFC00;text-shadow:0 0 8px rgba(124,252,0,0.8)">RESULT</div>
+              <div class="preview-sub" style="color:#7CFC00">EVER</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Hormozi Green</div>
+              <span class="card-badge badge-popular">Creator</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Lime</span>
+              <span class="tag-pill">Impact</span>
+            </div>
+          </div>
+
+          <!-- 18. IMAN GADZHI (Monochrome Minimal) -->
+          <div class="template-card" data-style="iman-gadzhi" data-cat="creators,most-used" title="Iman Gadzhi">
+            <div class="card-preview" style="background:#111">
+              <div class="preview-hero" style="color:#fff;font-size:9px;letter-spacing:0.04em">THE QUICK</div>
+              <div class="preview-hero" style="color:#fff;font-size:9px;letter-spacing:0.04em">BROWN FOX</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Iman Gadzhi</div>
+              <span class="card-badge badge-trending">Creator</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">White</span>
+              <span class="tag-pill">Minimal</span>
+            </div>
+          </div>
+
+          <!-- 19. EDITING SKOOL (Orange Badge) -->
+          <div class="template-card" data-style="editing-skool" data-cat="creators,new" title="Editing Skool">
+            <div class="card-preview" style="background:#0d0d12">
+              <div class="preview-sub">learn from</div>
+              <div style="background:#FF8C00;color:#000;font-weight:900;font-size:9px;padding:2px 8px;border-radius:4px">SKOOL</div>
+              <div class="preview-sub">editors</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Edit Skool</div>
+              <span class="card-badge badge-new">New</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Orange</span>
+              <span class="tag-pill">Badge</span>
+            </div>
+          </div>
+
+          <!-- 20. ARCHIVES (Handwritten Script) -->
+          <div class="template-card" data-style="archives" data-cat="new" title="Archives Handwritten">
+            <div class="card-preview" style="background:#0a0a0d">
+              <div style="font-family:'Caveat',cursive;font-size:13px;color:#FFF2E6">Your <span style="color:#FFA768;text-decoration:underline">Style</span> is it</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Archives ✨</div>
+              <span class="card-badge badge-new">Handwritten</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Cursive</span>
+              <span class="tag-pill">Aesthetic</span>
+            </div>
+          </div>
+
+          <!-- 21. SCRIBBLE (Playful Doodles) -->
+          <div class="template-card" data-style="scribble" data-cat="new" title="Scribble Doodles">
+            <div class="card-preview" style="background:#0a0a0e">
+              <div style="font-family:'Caveat',cursive;font-size:11px;color:#fff;display:flex;align-items:center;gap:3px">
+                the <span style="background:#F2CF3A;color:#1A1708;padding:1px 4px;border-radius:4px">little</span> <span style="border:1.5px solid #FF3838;border-radius:10px;padding:1px 4px">things</span>
+              </div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Scribble ✏️</div>
+              <span class="card-badge badge-new">Playful</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Doodle</span>
+              <span class="tag-pill">Yellow</span>
+            </div>
+          </div>
+
+          <!-- 22. BIG RED (Dramatic Crimson) -->
+          <div class="template-card" data-style="big-red" data-cat="trending,new" title="The Big Red">
+            <div class="card-preview" style="background:#0b080a;position:relative">
+              <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:#B82833;opacity:0.85">SECOND</div>
+              <div style="position:absolute;font-size:8px;color:#fff;font-weight:700">the quick fox</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Big Red</div>
+              <span class="card-badge badge-trending">Bold</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Crimson</span>
+              <span class="tag-pill">Cinema</span>
+            </div>
+          </div>
+
+          <!-- 23. AURA (Gradient Glow Editorial) -->
+          <div class="template-card" data-style="aura" data-cat="new" title="Aura Editorial">
+            <div class="card-preview" style="background:#0a0a0d">
+              <div style="font-family:'Playfair Display',serif;font-style:italic;font-size:10px;color:#fff">forget</div>
+              <div class="preview-hero" style="color:#7BD4FF;font-size:11px">STATUS</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Aura ✨</div>
+              <span class="card-badge badge-new">New</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Cyan</span>
+              <span class="tag-pill">Editorial</span>
+            </div>
+          </div>
+
+          <!-- 24. EDITOR MASALA (Gold Process) -->
+          <div class="template-card" data-style="editor-masala" data-cat="new" title="Editor Masala">
+            <div class="card-preview" style="background:#08080a">
+              <div class="preview-sub">trust the</div>
+              <div class="preview-hero" style="color:#FFD200;font-size:12px">PROCESS</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Ed. Masala ✨</div>
+              <span class="card-badge badge-popular">Popular</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Gold</span>
+              <span class="tag-pill">Clean</span>
+            </div>
+          </div>
+
+          <!-- 25. ILLUSION (3D Red-Cyan Chromatic) -->
+          <div class="template-card" data-style="illusion" data-cat="trending,new" title="Illusion 3D">
+            <div class="card-preview" style="background:#07070a">
+              <div class="preview-sub">find your</div>
+              <div class="preview-hero" style="color:#fff;text-shadow:2px 0 #FF143C, -2px 0 #00E1FF;font-size:12px">DESTINY</div>
+              <div class="preview-sub">in life</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Illusion 3D</div>
+              <span class="card-badge badge-trending">Trending</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">3D</span>
+              <span class="tag-pill">Glitch</span>
+            </div>
+          </div>
+
+          <!-- 26. NEON (Matrix Green Glow) -->
+          <div class="template-card" data-style="neon" data-cat="most-used" title="Neon Electric">
+            <div class="card-preview" style="background:#000">
+              <div class="preview-hero" style="color:#39FF14;text-shadow:0 0 8px #39FF14">ELECTRIC</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Neon Glow</div>
+              <span class="card-badge badge-popular">Popular</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Green</span>
+              <span class="tag-pill">Glow</span>
+            </div>
+          </div>
+
+          <!-- 27. FIRE (Flame Gradient) -->
+          <div class="template-card" data-style="fire" data-cat="trending" title="Fire Flame">
+            <div class="card-preview" style="background:#000">
+              <div class="preview-hero" style="background:linear-gradient(180deg,#FFD700,#FF0000);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:900">HOT FIRE</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Fire 🔥</div>
+              <span class="card-badge badge-trending">Trending</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Flame</span>
+              <span class="tag-pill">Gradient</span>
+            </div>
+          </div>
+
+          <!-- 28. KARAOKE (Dual Color Wipe) -->
+          <div class="template-card" data-style="karaoke" data-cat="most-used" title="Karaoke Beat Sync">
+            <div class="card-preview" style="background:#111">
+              <div style="font-size:11px;font-weight:800"><span style="color:#888">sing </span><span style="color:#FF6B35">along</span></div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Karaoke Wipe</div>
+              <span class="card-badge badge-popular">Popular</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Wipe</span>
+              <span class="tag-pill">Beats</span>
+            </div>
+          </div>
+
+          <!-- 29. WORD POP (Violet Bounce) -->
+          <div class="template-card" data-style="word-pop" data-cat="most-used" title="Word Pop">
+            <div class="card-preview" style="background:#111">
+              <div class="preview-hero" style="color:#A78BFA;font-size:12px">POP VIOLET</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Word Pop</div>
+              <span class="card-badge badge-popular">Popular</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Purple</span>
+              <span class="tag-pill">Bounce</span>
+            </div>
+          </div>
+
+          <!-- 30. HIGHLIGHTED WORD (Orange Accent) -->
+          <div class="template-card" data-style="highlighted-word" data-cat="most-used" title="Highlighted Word">
+            <div class="card-preview" style="background:#0d0d0d">
+              <div style="font-size:9px;color:#fff">the <span style="color:#FF8C00;font-weight:900">POWER</span> of words</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Word Highlight</div>
+              <span class="card-badge badge-popular">Popular</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Orange</span>
+              <span class="tag-pill">Contrast</span>
+            </div>
+          </div>
+
+          <!-- 31. GLITCH (Cyberpunk RGB Shift) -->
+          <div class="template-card" data-style="glitch" data-cat="trending" title="Glitch Cyberpunk">
+            <div class="card-preview" style="background:#000">
+              <div class="preview-hero" style="color:#00FFFF;text-shadow:2px 0 #FF00FF,-2px 0 #00FF00;font-size:12px">GLITCH</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Glitch Cyber</div>
+              <span class="card-badge badge-trending">Trending</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Cyber</span>
+              <span class="tag-pill">Shift</span>
+            </div>
+          </div>
+
+          <!-- 32. PRISM (Rainbow RGB Spectrum) -->
+          <div class="template-card" data-style="prism" data-cat="trending" title="Prism RGB">
+            <div class="card-preview" style="background:#000">
+              <div class="preview-hero" style="background:linear-gradient(90deg,#f00,#ff0,#0f0,#00f,#f0f);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:900">RAINBOW</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Prism RGB</div>
+              <span class="card-badge badge-popular">RGB</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Color</span>
+              <span class="tag-pill">Spectrum</span>
+            </div>
+          </div>
+
+          <!-- 33. DEEP GLOW (Pure White Aura) -->
+          <div class="template-card" data-style="deep-glow" data-cat="most-used" title="Deep Glow">
+            <div class="card-preview" style="background:#000">
+              <div class="preview-hero" style="color:#fff;text-shadow:0 0 10px rgba(255,255,255,0.9)">DEEP GLOW</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Deep Glow</div>
+              <span class="card-badge badge-popular">Popular</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">White</span>
+              <span class="tag-pill">Clean</span>
+            </div>
+          </div>
+
+          <!-- 34. GOLD METALLIC -->
+          <div class="template-card" data-style="gold" data-cat="creators" title="Gold Metallic">
+            <div class="card-preview" style="background:#000">
+              <div class="preview-hero" style="background:linear-gradient(135deg,#BF953F,#FCF6BA,#B38728);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:900">PREMIUM</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Gold Metallic</div>
+              <span class="card-badge badge-popular">Gold</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Luxury</span>
+              <span class="tag-pill">Shine</span>
+            </div>
+          </div>
+
+          <!-- 35. LIQUID GLASS -->
+          <div class="template-card" data-style="liquid-glass" data-cat="trending,new" title="Liquid Glass">
+            <div class="card-preview" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px">
+              <div style="font-size:10px;color:#fff">Liquid Glass ✨</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Liq. Glass</div>
+              <span class="card-badge badge-new">New</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Glass</span>
+              <span class="tag-pill">Frost</span>
+            </div>
+          </div>
+
+          <!-- 36. CINEMATIC -->
+          <div class="template-card" data-style="cinematic" data-cat="most-used" title="Cinematic Widescreen">
+            <div class="card-preview" style="background:#000">
+              <div style="color:#E5E7EB;font-size:8px;letter-spacing:0.25em;font-weight:700">CINEMA 21:9</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Cinematic</div>
+              <span class="card-badge badge-popular">Cinema</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Spaced</span>
+              <span class="tag-pill">Letterbox</span>
+            </div>
+          </div>
+
+          <!-- 37. COMIC BOOK POW -->
+          <div class="template-card" data-style="comic" data-cat="trending" title="Comic Book">
+            <div class="card-preview" style="background:#FFF">
+              <div style="color:#000;font-weight:900;font-size:13px;-webkit-text-stroke:0.5px #000">POW!</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Comic POW</div>
+              <span class="card-badge badge-popular">Comic</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Pop</span>
+              <span class="tag-pill">Retro</span>
+            </div>
+          </div>
+
+          <!-- 38. OUTLINE HOLLOW -->
+          <div class="template-card" data-style="outline" data-cat="creators" title="Outline Hollow">
+            <div class="card-preview" style="background:#222">
+              <div style="color:transparent;-webkit-text-stroke:1px white;font-weight:900;font-size:12px">OUTLINE</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Outline</div>
+              <span class="card-badge badge-popular">Hollow</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Stroke</span>
+              <span class="tag-pill">Modern</span>
+            </div>
+          </div>
+
+          <!-- 39. RETRO VINTAGE -->
+          <div class="template-card" data-style="retro" data-cat="new" title="Retro Vintage">
+            <div class="card-preview" style="background:#2A1A0A">
+              <div style="color:#FFB347;font-size:9px;border:1px solid #8B4513;padding:2px 6px">RETRO 80s</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Retro Vintage</div>
+              <span class="card-badge badge-new">80s</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Warm</span>
+              <span class="tag-pill">Classic</span>
+            </div>
+          </div>
+
+          <!-- 40. CLASSIC MINIMAL -->
+          <div class="template-card" data-style="classic" data-cat="most-used" title="Classic Subtitle">
+            <div class="card-preview" style="background:#000">
+              <div style="color:#fff;font-size:10px;text-shadow:1px 1px 2px #000">Classic Text</div>
+            </div>
+            <div class="card-meta">
+              <div class="card-name">Classic</div>
+              <span class="card-badge badge-popular">Default</span>
+            </div>
+            <div class="card-tags">
+              <span class="tag-pill">Simple</span>
+              <span class="tag-pill">Clean</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- TAB 2: TEXT SETTINGS INSPECTOR -->
+      <div class="tab-content" id="tab-content-text" style="display:none">
+        <div class="text-inspector-panel">
+
+          <div class="inspector-group">
+            <label class="inspector-label">Font Family</label>
+            <select class="inspector-select" id="text-font-family">
+              <option value="'Space Grotesk', sans-serif" selected>Space Grotesk (Modern Bold)</option>
+              <option value="'Inter', sans-serif">Inter (Clean Sans)</option>
+              <option value="Impact, sans-serif">Impact (Ultra Bold Meme)</option>
+              <option value="'Playfair Display', serif">Playfair Display (Luxury Serif)</option>
+              <option value="'Caveat', cursive">Caveat (Handwritten Script)</option>
+              <option value="monospace">Monospace (Terminal Code)</option>
+            </select>
+          </div>
+
+          <div class="inspector-group">
+            <label class="inspector-label">Scale &amp; Size</label>
+            <div class="caption-size-pills">
+              <button class="size-pill" data-size="0.75">S</button>
+              <button class="size-pill active" data-size="1.0">M</button>
+              <button class="size-pill" data-size="1.3">L</button>
+              <button class="size-pill" data-size="1.6">XL</button>
+            </div>
+            <input type="range" class="inspector-slider" id="text-size-slider" min="0.5" max="2.2" step="0.05" value="1.0">
+          </div>
+
+          <div class="inspector-group">
+            <label class="inspector-label">Text Colors</label>
+            <div class="color-pickers-row">
+              <div class="color-picker-item">
+                <span class="color-item-label">Primary</span>
+                <input type="color" id="text-primary-color" value="#FFFFFF" class="color-input">
+              </div>
+              <div class="color-picker-item">
+                <span class="color-item-label">Active Word</span>
+                <input type="color" id="text-highlight-color" value="#A6FF00" class="color-input">
+              </div>
+              <div class="color-picker-item">
+                <span class="color-item-label">Shadow/Stroke</span>
+                <input type="color" id="text-stroke-color" value="#000000" class="color-input">
+              </div>
+            </div>
+          </div>
+
+          <div class="inspector-group">
+            <label class="inspector-label">Vertical Position</label>
+            <div class="caption-pos-pills">
+              <button class="pos-pill" data-pos="-0.45">Top</button>
+              <button class="pos-pill" data-pos="-0.20">Center</button>
+              <button class="pos-pill active" data-pos="0">Bottom</button>
+            </div>
+          </div>
+
+          <div class="inspector-group">
+            <label class="inspector-label">Text Transform</label>
+            <div class="case-toggle">
+              <button class="case-btn active" id="text-case-upper">UPPERCASE</button>
+              <button class="case-btn" id="text-case-normal">Normal</button>
+            </div>
+          </div>
+
+          <div class="inspector-group">
+            <label class="inspector-label">Glow &amp; Shadow Intensity</label>
+            <input type="range" class="inspector-slider" id="text-glow-slider" min="0" max="30" step="1" value="12">
+          </div>
+
+        </div>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
+       3. BOTTOM MULTI-TRACK TIMELINE & CAPTION DOCK
+       ════════════════════════════════════════════════════════════ -->
+  <footer class="bottom-timeline" id="bottom-timeline">
+
+    <!-- Timeline Transport & Tools Bar (Captik 1:1 Icons Sequence) -->
+    <div class="timeline-controls-bar">
+      <!-- Left: Playback & Edit Icons -->
+      <div class="timeline-transport-group">
+        <!-- 1. |◁ Prev Word / Frame -->
+        <button class="timeline-icon-btn" id="timeline-btn-prev" title="Previous Word / Step (Left Arrow)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5a1 1 0 0 1 1 1v12a1 1 0 1 1-2 0V6a1 1 0 0 1 1-1zm12.293.293a1 1 0 0 1 0 1.414L11.414 12l6.879 5.293a1 1 0 0 1-1.2 1.6l-8-6a1 1 0 0 1 0-1.586l8-6a1 1 0 0 1 1.2.293z"/></svg>
+        </button>
+
+        <!-- 2. ▶ Signature Glowing Yellow Play Button -->
+        <button class="timeline-play-btn" id="timeline-btn-play" title="Play / Pause (Space)">
+          <svg width="18" height="18" id="timeline-play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14z"/></svg>
+        </button>
+
+        <!-- 3. ▷| Next Word / Frame -->
+        <button class="timeline-icon-btn" id="timeline-btn-next" title="Next Word / Step (Right Arrow)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18 5a1 1 0 0 1 1 1v12a1 1 0 1 1-2 0V6a1 1 0 0 1 1-1zm-12.293.293a1 1 0 0 0 0 1.414L12.586 12 5.707 17.293a1 1 0 0 0 1.2 1.6l8-6a1 1 0 0 0 0-1.586l-8-6a1 1 0 0 0-1.2.293z"/></svg>
+        </button>
+
+        <!-- 4. ↺ Undo -->
+        <button class="timeline-icon-btn" id="timeline-btn-undo" title="Undo (Ctrl+Z)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+        </button>
+
+        <!-- 5. ↻ Redo -->
+        <button class="timeline-icon-btn" id="timeline-btn-redo" title="Redo (Ctrl+Y)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>
+        </button>
+
+        <!-- 6. 🗑️ Delete -->
+        <button class="timeline-icon-btn" id="timeline-btn-delete" title="Delete Caption Block (Del)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        </button>
+
+        <!-- 7. WORD / LINE Capsule Mode Toggle -->
+        <div class="captik-mode-capsule">
+          <button class="capsule-pill" id="btn-mode-word">WORD</button>
+          <button class="capsule-pill active" id="btn-mode-line">LINE</button>
+        </div>
+
+        <!-- 8. + Line -->
+        <button class="timeline-addline-btn" id="timeline-btn-add-line" title="Add Line at playhead">
+          <span class="plus-icon">+</span> Line
+        </button>
+
+        <!-- 9. ⚡ Flash -->
+        <button class="timeline-icon-btn" id="timeline-btn-flash" title="Velocity / Flash Sync">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 3 14h7v8l10-12h-7z"/></svg>
+        </button>
+
+        <!-- 10. ⊡ Crop/Frame -->
+        <button class="timeline-icon-btn" id="timeline-btn-crop" title="Frame Crop &amp; Bounds">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+
+        <!-- 11. ⇥⇤ Split / Align -->
+        <button class="timeline-icon-btn" id="timeline-btn-split" title="Split Line at current time">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h7m-3-3 3 3-3 3M20 12h-7m3-3-3 3 3 3M12 4v16"/></svg>
+        </button>
+
+        <!-- 12. ← Left Nudge -->
+        <button class="timeline-icon-btn" id="timeline-btn-nudge-left" title="Nudge 0.1s Earlier">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5m7 7-7-7 7-7"/></svg>
+        </button>
+
+        <!-- 13. → Right Nudge -->
+        <button class="timeline-icon-btn" id="timeline-btn-nudge-right" title="Nudge 0.1s Later">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14m-7 7 7-7-7-7"/></svg>
+        </button>
+
+        <!-- 14. % Speed -->
+        <button class="timeline-icon-btn" id="timeline-btn-speed" title="Playback Speed">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+        </button>
+
+        <!-- 15. 🕒 Timecode (00:00 / 01:58) -->
+        <div class="captik-time-group">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span class="timeline-timecode" id="timeline-timecode">00:00 / 01:58</span>
+        </div>
+      </div>
+
+      <!-- Right: Zoom & Full Fit -->
+      <div class="timeline-zoom-group">
+        <div class="zoom-slider-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="range" id="timeline-zoom-slider" min="50" max="250" value="100" class="zoom-slider" title="Timeline Zoom">
+          <span class="zoom-percent-tag" id="zoom-percent-tag">100%</span>
+          <button class="timeline-icon-btn" id="btn-zoom-fit" title="Fit to Screen">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Multi-Track Area (Time Ruler + Audio Waveform) -->
+    <div class="timeline-tracks-viewport" id="timeline-tracks-viewport">
+
+      <!-- Vertical Playhead Line -->
+      <div class="timeline-playhead" id="timeline-playhead" style="display:none">
+        <div class="playhead-handle"></div>
+        <div class="playhead-line"></div>
+      </div>
+
+      <!-- Track 0: Dynamic Seconds Ruler -->
+      <div class="timeline-ruler" id="timeline-ruler">
+        <div class="ruler-spacer"></div>
+        <div class="ruler-track" id="ruler-ticks-track"></div>
+      </div>
+
+      <!-- Track 1: Audio Waveform Track (Glowing Emerald Green like Captik) -->
+      <div class="timeline-track waveform-track" id="timeline-waveform-track">
+        <div class="track-label">
+          <span class="track-icon">🔊</span>
+          <span>Audio</span>
+        </div>
+        <div class="track-content" id="waveform-track-content">
+          <canvas id="waveform-canvas" class="waveform-canvas"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+  </footer>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     4. AD GATE MODAL (Free Monetization Engine)
+     ════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="ad-modal-overlay" role="dialog" aria-modal="true" aria-label="Watch ad to download" style="display:none">
+  <div class="ad-modal">
+    <div class="ad-modal-header">
+      <div class="ad-modal-icon">📺</div>
+      <div>
+        <div class="ad-modal-title">Watch ad to download free</div>
+        <div class="ad-modal-sub">SubzFree is 100% free because of ads. Watch one short ad to unlock your video download.</div>
+      </div>
+    </div>
+
+    <div class="ad-modal-body">
+      <!-- AD SLOT -->
+      <div class="ad-slot-container">
+        <div class="ad-slot-actual" id="ad-slot-actual">
+          <div class="ad-placeholder">
+            <div class="ad-placeholder-icon">📢</div>
+            <div class="ad-placeholder-text">Ad loads here (High CPM Network)</div>
+            <div class="ad-placeholder-note">PropellerAds / AdSense / TrafficJunky</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Countdown + Progress -->
+      <div class="ad-progress-row">
+        <div class="ad-countdown" id="ad-countdown">30</div>
+        <div class="ad-progress-bar progress-bar">
+          <div class="progress-fill" id="ad-progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="ad-status-text" id="ad-status-text">Please watch the ad... download unlocks in <strong id="ad-sec">30</strong> seconds</div>
+
+      <button class="btn-unlock" id="btn-unlock" disabled>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Watching ad... (<span id="btn-unlock-timer">30s</span>)
+      </button>
+
+      <button class="btn btn-outline" id="btn-cancel-ad" style="width:100%;margin-top:10px;justify-content:center">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     5. RENDERING OVERLAY
+     ════════════════════════════════════════════════════════════ -->
+<div class="render-overlay" id="render-overlay" style="display:none">
+  <div class="spinner" style="width:48px;height:48px;border-width:4px"></div>
+  <div class="render-percent" id="render-percent">0%</div>
+  <div class="render-title">Rendering your video...</div>
+  <div class="render-sub" id="render-sub">Burning captions into frames</div>
+  <div class="render-progress progress-bar" style="width:300px">
+    <div class="progress-fill" id="render-progress-fill" style="width:0%"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     6. ACCURATE CAPTIONS & SCRIPT STUDIO MODAL
+     ════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="lyrics-modal" role="dialog" aria-modal="true" aria-label="Generate AI Captions &amp; Groq Whisper Setup" style="display:none">
+  <div class="modal-card" style="max-width:580px;padding:24px">
+    <div class="modal-header" style="padding:0 0 16px 0;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:10px;background:#0a0a0a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px">🤖</div>
+        <div>
+          <h3 style="margin:0;font-size:17px;font-weight:800;color:var(--black);letter-spacing:-0.02em">Generate AI Captions (Free Whisper)</h3>
+          <p style="margin:2px 0 0;font-size:12px;color:var(--text-muted)">Powered by 100% Free OpenAI Whisper via Groq Cloud</p>
+        </div>
+      </div>
+      <button class="modal-close" id="btn-close-lyrics" title="Close modal">✕</button>
+    </div>
+
+    <!-- Modal Tabs -->
+    <div class="modal-tabs" style="margin-bottom:18px">
+      <button class="modal-tab-btn active" id="modal-tab-btn-whisper" data-tab="whisper">
+        <span>🤖</span> Free Groq Whisper AI
+      </button>
+      <button class="modal-tab-btn" id="modal-tab-btn-script" data-tab="script">
+        <span>📝</span> Paste Script / Lyrics
+      </button>
+      <button class="modal-tab-btn" id="modal-tab-btn-live" data-tab="live">
+        <span>🎤</span> Live Dictate
+      </button>
+    </div>
+
+    <div class="modal-body" style="padding:0">
+      <!-- TAB 1: FREE AI WHISPER AUTO-TRANSCRIBE (DEFAULT) -->
+      <div class="modal-tab-pane active" id="modal-pane-whisper">
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 14px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#16a34a"></span>
+            <span style="font-size:12px;font-weight:800;color:#15803d">100% Free OpenAI Whisper AI (via Groq Cloud)</span>
+          </div>
+          <div style="font-size:12px;color:#374151;line-height:1.5">
+            Automatic hands-free speech recognition. Groq provides <strong>100% free</strong> Whisper AI transcription with zero subscription and no credit card required.
+          </div>
+        </div>
+
+        <div style="margin-bottom:14px">
+          <label style="display:flex;align-items:center;justify-content:space-between;font-size:11.5px;font-weight:700;color:var(--black);margin-bottom:6px">
+            <span>GROQ API KEY (FREE):</span>
+            <span style="font-size:10.5px;color:var(--text-muted);font-weight:600">Saved securely in your browser</span>
+          </label>
+          <div style="position:relative;display:flex;align-items:center">
+            <input type="password" id="input-groq-key" class="modal-input" style="width:100%;box-sizing:border-box;background:#f9fafb;border:1.5px solid var(--border-color);border-radius:8px;padding:11px 40px 11px 12px;color:var(--black);font-size:13px;font-family:inherit;margin-bottom:0" placeholder="Enter your Groq key: gsk_..." />
+            <button type="button" id="btn-toggle-groq-key" style="position:absolute;right:10px;background:none;border:none;cursor:pointer;font-size:14px;color:var(--gray-500);padding:4px" title="Show / Hide Key">👁️</button>
+          </div>
+          <div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center">
+            <a href="https://console.groq.com/keys" target="_blank" rel="noopener" style="font-size:11.5px;font-weight:700;color:#0a0a0a;text-decoration:underline">
+              👉 Click here to get a Free Groq Key (Instant 10-second setup)
+            </a>
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px">
+          <label style="display:block;font-size:11.5px;font-weight:700;color:var(--black);margin-bottom:6px">
+            SPOKEN LANGUAGE:
+          </label>
+          <select id="whisper-lang-select" class="modal-input" style="width:100%;box-sizing:border-box;background:#f9fafb;border:1.5px solid var(--border-color);border-radius:8px;padding:10px 12px;color:var(--black);font-size:12.5px;cursor:pointer;margin-bottom:0">
+            <option value="hinglish" selected>🇮🇳 Hinglish (Hindi words in English text — "Namaste dosto")</option>
+            <option value="auto">🌐 Auto Detect Language (Auto)</option>
+            <option value="hi">🇮🇳 Pure Hindi (हिंदी लिपि — "नमस्ते दोस्तों")</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="pa">🌾 Punjabi (ਪੰਜਾਬੀ)</option>
+            <option value="ta">🌴 Tamil (தமிழ்)</option>
+            <option value="te">🌿 Telugu (తెలుగు)</option>
+            <option value="bn">🎋 Bengali (বাংলা)</option>
+            <option value="mr">🌸 Marathi (मराठी)</option>
+            <option value="gu">🏛️ Gujarati (ગુજરાતી)</option>
+            <option value="ur">📖 Urdu (اردو)</option>
+            <option value="kn">🌾 Kannada (ಕನ್ನಡ)</option>
+            <option value="ml">🌴 Malayalam (മലയാളം)</option>
+          </select>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px">
+          <button class="btn btn-outline" id="btn-cancel-whisper">Cancel</button>
+          <button class="btn btn-primary" id="btn-run-whisper" style="background:#0a0a0a;color:#ffffff;font-weight:700;padding:10px 20px;border-radius:8px">
+            ✨ Generate Captions with AI Whisper
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 2: PASTE SCRIPT / LYRICS (100% ACCURATE) -->
+      <div class="modal-tab-pane" id="modal-pane-script" style="display:none">
+        <div style="background:#f8fafc;border:1px solid var(--border-color);border-radius:10px;padding:12px;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--black);margin-bottom:3px">💡 100% Word Accuracy Guarantee</div>
+          <div style="font-size:11.5px;color:var(--text-secondary);line-height:1.4">
+            Paste your exact spoken words, dialogue, or song lyrics below. SubzFree's audio engine aligns every single word directly to the vocal peaks in your video!
+          </div>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center">
+          <span style="font-size:11px;color:var(--text-muted);font-weight:600">Quick Samples:</span>
+          <button class="btn btn-sm btn-outline" id="btn-sample-speech">🔥 Motivation</button>
+          <button class="btn btn-sm btn-outline" id="btn-sample-song1">🎵 Gully Boy</button>
+          <button class="btn btn-sm btn-outline" id="btn-sample-song2">🎵 Punjabi Beat</button>
+          <button class="btn btn-sm btn-outline" id="btn-sample-song3">🎵 Diljit Lover</button>
+          <button class="btn btn-sm btn-outline" id="btn-sample-english">🇬🇧 English Hook</button>
+        </div>
+
+        <textarea id="lyrics-input" class="modal-textarea" rows="7" placeholder="Paste your script or lyrics here...&#10;Each line will become a synchronized caption block!&#10;&#10;Example:&#10;Basically yaar yeh step sabse important hai&#10;Agar tum dhyan se dekhoge toh samajh aayega&#10;Apna time aayega"></textarea>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px">
+          <button class="btn btn-outline" id="btn-cancel-lyrics">Cancel</button>
+          <button class="btn btn-primary" id="btn-apply-lyrics" style="background:#0a0a0a;color:#ffffff;font-weight:700;padding:10px 18px;border-radius:8px">
+            ✨ Apply &amp; Sync Words to Audio
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 3: LIVE VOICE DICTATE -->
+      <div class="modal-tab-pane" id="modal-pane-live" style="display:none">
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+          Speak into your microphone or play the video aloud — Chrome's built-in AI will convert your speech to text in real-time.
+        </p>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+          <button class="btn btn-sm btn-outline" id="btn-voice-dictate" style="border-color:#0a0a0a;color:#0a0a0a;font-weight:700;padding:8px 16px">
+            🎤 Start Listening
+          </button>
+          <span id="dictate-status" style="font-size:11px;color:var(--text-muted)">Click to start microphone</span>
+        </div>
+        <textarea id="dictate-preview" class="modal-textarea" rows="5" placeholder="Transcribed voice text will appear here..."></textarea>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px">
+          <button class="btn btn-primary" id="btn-apply-dictate" style="background:#0a0a0a;color:#ffffff;font-weight:700;padding:10px 18px;border-radius:8px">
+            ✨ Use This Script
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ── -->
+<div class="toast" id="toast" role="alert" aria-live="polite"></div>
+
+<!-- ── Scripts ── -->
+<script src="js/captions.js?v=hinglish_v4" charset="utf-8"></script>
+<script src="js/transcribe.js?v=hinglish_v4" charset="utf-8"></script>
+<script src="js/adgate.js?v=hinglish_v4" charset="utf-8"></script>
+<script src="js/export.js?v=hinglish_v4" charset="utf-8"></script>
+<script src="js/editor.js?v=hinglish_v4" charset="utf-8"></script>
+
+</body>
+</html>
