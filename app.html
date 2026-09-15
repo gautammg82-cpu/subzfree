@@ -1201,9 +1201,9 @@
     </div>
 
     <div class="ad-modal-body">
-      <!-- AD SLOT -->
-      <div class="ad-slot-container" style="margin-bottom:16px">
-        <div class="ad-slot-actual" id="ad-slot-actual" style="min-height:110px!important;background:#0f172a!important;border:1.5px solid #334155!important;border-radius:12px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;padding:16px 14px!important;box-shadow:0 4px 16px rgba(0,0,0,0.25)!important">
+      <!-- SPONSOR CARD -->
+      <div class="sponsor-card-box" id="sponsor-card-box" style="margin-bottom:16px!important">
+        <div class="sponsor-inner-card" id="ad-slot-actual" style="min-height:110px!important;background:#0f172a!important;border:1.5px solid #334155!important;border-radius:12px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;padding:16px 14px!important;box-shadow:0 4px 16px rgba(0,0,0,0.25)!important">
           <div style="font-size:26px;margin-bottom:6px">⚡</div>
           <div style="font-size:14px;font-weight:700;color:#ffffff!important;margin-bottom:4px">SubzFree 100% Free Export</div>
           <div style="font-size:11.5px;color:#94a3b8!important;line-height:1.4;max-width:320px;text-align:center">
@@ -1385,12 +1385,164 @@
 <div class="toast" id="toast" role="alert" aria-live="polite"></div>
 
 <!-- ── Scripts ── -->
-<script src="js/captions.js?v=adsterra_v3" charset="utf-8"></script>
-<script src="js/transcribe.js?v=adsterra_v3" charset="utf-8"></script>
-<script src="js/adgate.js?v=adsterra_v3" charset="utf-8"></script>
-<script src="adgate.js?v=adsterra_v3" charset="utf-8"></script>
-<script src="js/export.js?v=adsterra_v3" charset="utf-8"></script>
-<script src="js/editor.js?v=adsterra_v3" charset="utf-8"></script>
+<script src="js/captions.js?v=adsterra_v4" charset="utf-8"></script>
+<script src="js/transcribe.js?v=adsterra_v4" charset="utf-8"></script>
+<script>
+/**
+ * SubzFree — Inlined Ad Gate System & Adsterra Direct Link Integration
+ */
+window.ADGATE = (() => {
+  let ADSTERRA_DIRECT_LINK = 'https://www.profitableratecpmnetwork.com/muhwpe78?key=3552137a3c47a6b8f44b00fa5bf53f56';
+  const AD_DURATION = 5; // Exactly 5 seconds countdown!
+
+  let overlay, countdown, progressFill, statusText, secSpan,
+      btnUnlock, btnUnlockTimer, btnCancel;
+  let timer = null;
+  let elapsed = 0;
+  let onUnlockCallback = null;
+
+  function setDirectLink(url) {
+    if (url && typeof url === 'string') ADSTERRA_DIRECT_LINK = url.trim();
+  }
+
+  function getDirectLink() {
+    return ADSTERRA_DIRECT_LINK;
+  }
+
+  function triggerDirectLink() {
+    if (ADSTERRA_DIRECT_LINK && !ADSTERRA_DIRECT_LINK.includes('YOUR_DIRECT_LINK_HERE')) {
+      try {
+        window.open(ADSTERRA_DIRECT_LINK, '_blank');
+      } catch (e) {
+        console.warn('Pop-up blocked:', e);
+      }
+    }
+  }
+
+  function init() {
+    overlay        = document.getElementById('ad-modal-overlay');
+    countdown      = document.getElementById('ad-countdown');
+    progressFill   = document.getElementById('ad-progress-fill');
+    statusText     = document.getElementById('ad-status-text');
+    secSpan        = document.getElementById('ad-sec');
+    btnUnlock      = document.getElementById('btn-unlock');
+    btnUnlockTimer = document.getElementById('btn-unlock-timer');
+    btnCancel      = document.getElementById('btn-cancel-ad');
+
+    if (btnCancel) btnCancel.addEventListener('click', close);
+    if (btnUnlock) {
+      btnUnlock.addEventListener('click', () => {
+        if (!btnUnlock.disabled && onUnlockCallback) {
+          triggerDirectLink();
+          close();
+          onUnlockCallback();
+        }
+      });
+    }
+
+    if (overlay) {
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay) close();
+      });
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && overlay && overlay.classList.contains('open')) close();
+    });
+  }
+
+  function open(onUnlock) {
+    if (!overlay) init();
+    onUnlockCallback = onUnlock;
+    elapsed = 0;
+
+    if (!overlay) return;
+    overlay.classList.add('open');
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    updateCountdown(AD_DURATION);
+    if (btnUnlock) {
+      btnUnlock.disabled = true;
+      btnUnlock.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Verifying sponsor... (<span id="btn-unlock-timer">${AD_DURATION}s</span>)
+      `;
+      btnUnlockTimer = document.getElementById('btn-unlock-timer');
+    }
+
+    clearInterval(timer);
+    timer = setInterval(tick, 1000);
+  }
+
+  function tick() {
+    elapsed++;
+    const remaining = AD_DURATION - elapsed;
+    updateCountdown(remaining);
+
+    if (remaining <= 0) {
+      clearInterval(timer);
+      unlockDownload();
+    }
+  }
+
+  function updateCountdown(remaining) {
+    const rem = Math.max(0, remaining);
+    if (countdown) countdown.textContent = rem;
+    if (secSpan) secSpan.textContent = rem;
+    if (btnUnlockTimer) btnUnlockTimer.textContent = rem + 's';
+
+    const pct = ((AD_DURATION - rem) / AD_DURATION) * 100;
+    if (progressFill) progressFill.style.width = pct + '%';
+  }
+
+  function unlockDownload() {
+    if (btnUnlock) {
+      btnUnlock.disabled = false;
+      btnUnlock.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        ⚡ Download Video Free Now
+      `;
+    }
+    if (statusText) {
+      statusText.innerHTML = '🎉 Sponsor verified! Click above to start your download.';
+      statusText.style.color = '#16a34a';
+      statusText.style.fontWeight = '700';
+    }
+  }
+
+  function close() {
+    clearInterval(timer);
+    if (overlay) {
+      overlay.classList.remove('open');
+      overlay.style.display = 'none';
+    }
+    document.body.style.overflow = '';
+    if (statusText) {
+      statusText.style.color = '';
+      statusText.style.fontWeight = '';
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  return { open, close, setDirectLink, getDirectLink, triggerDirectLink };
+})();
+</script>
+<script src="js/export.js?v=adsterra_v4" charset="utf-8"></script>
+<script src="js/editor.js?v=adsterra_v4" charset="utf-8"></script>
 
 </body>
 </html>
