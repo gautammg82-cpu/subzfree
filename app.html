@@ -5,8 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SubzFree Editor — AI Caption Generator & Video Editor</title>
   <meta name="robots" content="noindex"/>
-  <link rel="stylesheet" href="styles/global.css"/>
-  <link rel="stylesheet" href="styles/editor.css"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
+  <link rel="stylesheet" href="styles/global.css?v=5"/>
+  <link rel="stylesheet" href="styles/editor.css?v=5"/>
 </head>
 <body>
 <div class="app-shell">
@@ -1193,37 +1196,44 @@
 <div class="modal-overlay" id="ad-modal-overlay" role="dialog" aria-modal="true" aria-label="Watch ad to download" style="display:none">
   <div class="ad-modal">
     <div class="ad-modal-header">
-      <div class="ad-modal-icon">📺</div>
+      <div class="ad-modal-icon">⚡</div>
       <div>
-        <div class="ad-modal-title">Watch ad to download free</div>
-        <div class="ad-modal-sub">SubzFree is 100% free because of ads. Watch one short ad to unlock your video download.</div>
+        <div class="ad-modal-title">Unlock 100% Free Video Export</div>
+        <div class="ad-modal-sub">SubzFree is 100% free forever. Tap the sponsor button below or wait 3s to download!</div>
       </div>
     </div>
 
     <div class="ad-modal-body">
-      <!-- SPONSOR CARD -->
+      <!-- CLICKABLE SPONSOR CARD -->
       <div class="sponsor-card-box" id="sponsor-card-box" style="margin-bottom:16px!important">
-        <div class="sponsor-inner-card" id="ad-slot-actual" style="min-height:110px!important;background:#0f172a!important;border:1.5px solid #334155!important;border-radius:12px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;padding:16px 14px!important;box-shadow:0 4px 16px rgba(0,0,0,0.25)!important">
-          <div style="font-size:26px;margin-bottom:6px">⚡</div>
-          <div style="font-size:14px;font-weight:700;color:#ffffff!important;margin-bottom:4px">SubzFree 100% Free Export</div>
-          <div style="font-size:11.5px;color:#94a3b8!important;line-height:1.4;max-width:320px;text-align:center">
-            Click below to unlock your high-quality video download &amp; support free tools!
+        <a href="https://www.profitableratecpmnetwork.com/muhwpe78?key=3552137a3c47a6b8f44b00fa5bf53f56" target="_blank" rel="noopener noreferrer" id="sponsor-action-link" style="text-decoration:none!important;display:block!important;cursor:pointer!important">
+          <div class="sponsor-inner-card" id="ad-slot-actual" style="min-height:115px!important;background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%)!important;border:2px solid #6366f1!important;border-radius:14px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;padding:16px 14px!important;box-shadow:0 6px 20px rgba(99,102,241,0.3)!important;cursor:pointer!important">
+            <div style="display:flex;align-items:center;gap:6px;background:rgba(99,102,241,0.25);padding:4px 12px;border-radius:20px;margin-bottom:8px">
+              <span style="font-size:13px">⚡</span>
+              <span style="font-size:11px;font-weight:700;color:#a5b4fc;text-transform:uppercase;letter-spacing:0.5px">Official Free Sponsor</span>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#ffffff!important;margin-bottom:4px;text-align:center;line-height:1.3">
+              👉 Click Here to Open Sponsor &amp; Unlock Video 👈
+            </div>
+            <div style="font-size:11.5px;color:#cbd5e1!important;line-height:1.4;text-align:center">
+              Tap to open sponsor in new tab &amp; unlock video download instantly!
+            </div>
           </div>
-        </div>
+        </a>
       </div>
 
       <!-- Countdown + Progress -->
       <div class="ad-progress-row">
-        <div class="ad-countdown" id="ad-countdown">5</div>
+        <div class="ad-countdown" id="ad-countdown">3</div>
         <div class="ad-progress-bar progress-bar">
           <div class="progress-fill" id="ad-progress-fill" style="width:0%"></div>
         </div>
       </div>
-      <div class="ad-status-text" id="ad-status-text">Verifying sponsor... download unlocks in <strong id="ad-sec">5</strong> seconds</div>
+      <div class="ad-status-text" id="ad-status-text">Auto-unlocking download in <strong id="ad-sec">3</strong> seconds...</div>
 
-      <button class="btn-unlock" id="btn-unlock" disabled>
+      <button class="btn-unlock" id="btn-unlock" disabled style="background:#0a0a0a;color:#ffffff;transition:all 0.2s ease">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Verifying sponsor... (<span id="btn-unlock-timer">5s</span>)
+        Preparing your video... (<span id="btn-unlock-timer">3s</span>)
       </button>
 
       <button class="btn btn-outline" id="btn-cancel-ad" style="width:100%;margin-top:10px;justify-content:center">Cancel</button>
@@ -1385,21 +1395,22 @@
 <div class="toast" id="toast" role="alert" aria-live="polite"></div>
 
 <!-- ── Scripts ── -->
-<script src="js/captions.js?v=adsterra_v4" charset="utf-8"></script>
-<script src="js/transcribe.js?v=adsterra_v4" charset="utf-8"></script>
+<script src="js/captions.js?v=adsterra_v5" charset="utf-8"></script>
+<script src="js/transcribe.js?v=adsterra_v5" charset="utf-8"></script>
 <script>
 /**
  * SubzFree — Inlined Ad Gate System & Adsterra Direct Link Integration
  */
 window.ADGATE = (() => {
   let ADSTERRA_DIRECT_LINK = 'https://www.profitableratecpmnetwork.com/muhwpe78?key=3552137a3c47a6b8f44b00fa5bf53f56';
-  const AD_DURATION = 5; // Exactly 5 seconds countdown!
+  const AD_DURATION = 3; // Fast 3-second auto-unlock!
 
   let overlay, countdown, progressFill, statusText, secSpan,
-      btnUnlock, btnUnlockTimer, btnCancel;
+      btnUnlock, btnUnlockTimer, btnCancel, sponsorLink;
   let timer = null;
   let elapsed = 0;
   let onUnlockCallback = null;
+  let sponsorClicked = false;
 
   function setDirectLink(url) {
     if (url && typeof url === 'string') ADSTERRA_DIRECT_LINK = url.trim();
@@ -1428,12 +1439,28 @@ window.ADGATE = (() => {
     btnUnlock      = document.getElementById('btn-unlock');
     btnUnlockTimer = document.getElementById('btn-unlock-timer');
     btnCancel      = document.getElementById('btn-cancel-ad');
+    sponsorLink    = document.getElementById('sponsor-action-link');
+
+    if (sponsorLink) {
+      sponsorLink.addEventListener('click', () => {
+        sponsorClicked = true;
+        clearInterval(timer);
+        unlockDownload();
+        if (statusText) {
+          statusText.innerHTML = '🎉 Sponsor opened! Click the button below to start your video download!';
+          statusText.style.color = '#10b981';
+          statusText.style.fontWeight = '700';
+        }
+      });
+    }
 
     if (btnCancel) btnCancel.addEventListener('click', close);
     if (btnUnlock) {
       btnUnlock.addEventListener('click', () => {
         if (!btnUnlock.disabled && onUnlockCallback) {
-          triggerDirectLink();
+          if (!sponsorClicked) {
+            triggerDirectLink();
+          }
           close();
           onUnlockCallback();
         }
@@ -1455,6 +1482,7 @@ window.ADGATE = (() => {
     if (!overlay) init();
     onUnlockCallback = onUnlock;
     elapsed = 0;
+    sponsorClicked = false;
 
     if (!overlay) return;
     overlay.classList.add('open');
@@ -1464,13 +1492,14 @@ window.ADGATE = (() => {
     updateCountdown(AD_DURATION);
     if (btnUnlock) {
       btnUnlock.disabled = true;
+      btnUnlock.style.background = '#0a0a0a';
       btnUnlock.innerHTML = `
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="7 10 12 15 17 10"/>
           <line x1="12" y1="15" x2="12" y2="3"/>
         </svg>
-        Verifying sponsor... (<span id="btn-unlock-timer">${AD_DURATION}s</span>)
+        Preparing your video... (<span id="btn-unlock-timer">${AD_DURATION}s</span>)
       `;
       btnUnlockTimer = document.getElementById('btn-unlock-timer');
     }
@@ -1503,6 +1532,7 @@ window.ADGATE = (() => {
   function unlockDownload() {
     if (btnUnlock) {
       btnUnlock.disabled = false;
+      btnUnlock.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
       btnUnlock.innerHTML = `
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -1513,8 +1543,8 @@ window.ADGATE = (() => {
       `;
     }
     if (statusText) {
-      statusText.innerHTML = '🎉 Sponsor verified! Click above to start your download.';
-      statusText.style.color = '#16a34a';
+      statusText.innerHTML = '🎉 Ready! Click above or below to start your download.';
+      statusText.style.color = '#10b981';
       statusText.style.fontWeight = '700';
     }
   }
@@ -1541,8 +1571,8 @@ window.ADGATE = (() => {
   return { open, close, setDirectLink, getDirectLink, triggerDirectLink };
 })();
 </script>
-<script src="js/export.js?v=adsterra_v4" charset="utf-8"></script>
-<script src="js/editor.js?v=adsterra_v4" charset="utf-8"></script>
+<script src="js/export.js?v=adsterra_v5" charset="utf-8"></script>
+<script src="js/editor.js?v=adsterra_v5" charset="utf-8"></script>
 
 </body>
 </html>
