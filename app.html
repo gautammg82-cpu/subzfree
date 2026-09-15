@@ -1279,10 +1279,10 @@
       </div>
       <div class="ad-status-text" id="ad-status-text">Auto-unlocking download in <strong id="ad-sec">3</strong> seconds...</div>
 
-      <button class="btn-unlock" id="btn-unlock" disabled style="background:#0a0a0a;color:#ffffff;transition:all 0.2s ease">
+      <a class="btn-unlock disabled" id="btn-unlock" href="javascript:void(0)" target="_blank" rel="noopener noreferrer" style="background:#0a0a0a;color:#ffffff!important;text-decoration:none!important;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border-radius:var(--radius);font-size:14.5px;font-weight:800;font-family:inherit;box-sizing:border-box;pointer-events:none;opacity:0.4;cursor:not-allowed;transition:all 0.2s ease">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Preparing your video... (<span id="btn-unlock-timer">3s</span>)
-      </button>
+      </a>
 
       <button class="btn btn-outline" id="btn-cancel-ad" style="width:100%;margin-top:10px;justify-content:center">Cancel</button>
     </div>
@@ -1581,13 +1581,21 @@ window.ADGATE = (() => {
 
     if (btnCancel) btnCancel.addEventListener('click', close);
     if (btnUnlock) {
-      btnUnlock.addEventListener('click', () => {
-        if (!btnUnlock.disabled && onUnlockCallback) {
-          if (!sponsorClicked) {
-            triggerDirectLink();
-          }
-          close();
-          onUnlockCallback();
+      btnUnlock.addEventListener('click', (e) => {
+        if (btnUnlock.classList.contains('disabled') || btnUnlock.style.pointerEvents === 'none' || btnUnlock.getAttribute('href') === 'javascript:void(0)') {
+          e.preventDefault();
+          return;
+        }
+
+        // Native <a> tag navigates to Adsterra direct link in a new tab!
+        // Start render and close modal in this tab:
+        if (onUnlockCallback) {
+          const cb = onUnlockCallback;
+          onUnlockCallback = null;
+          setTimeout(() => {
+            close();
+            cb();
+          }, 200);
         }
       });
     }
@@ -1614,6 +1622,17 @@ window.ADGATE = (() => {
     overlay.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
+    // Reset button to initial countdown state
+    if (btnUnlock) {
+      btnUnlock.classList.add('disabled');
+      btnUnlock.setAttribute('href', 'javascript:void(0)');
+      btnUnlock.style.pointerEvents = 'none';
+      btnUnlock.style.opacity = '0.4';
+      btnUnlock.style.cursor = 'not-allowed';
+      btnUnlock.style.background = '#0a0a0a';
+      btnUnlock.style.boxShadow = 'none';
+    }
+
     // Check AdBlocker first!
     const isBlocked = await detectAdBlock();
     if (isBlocked) {
@@ -1632,8 +1651,13 @@ window.ADGATE = (() => {
 
     updateCountdown(AD_DURATION);
     if (btnUnlock) {
-      btnUnlock.disabled = true;
+      btnUnlock.classList.add('disabled');
+      btnUnlock.setAttribute('href', 'javascript:void(0)');
+      btnUnlock.style.pointerEvents = 'none';
+      btnUnlock.style.opacity = '0.4';
+      btnUnlock.style.cursor = 'not-allowed';
       btnUnlock.style.background = '#0a0a0a';
+      btnUnlock.style.boxShadow = 'none';
       btnUnlock.innerHTML = `
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -1672,8 +1696,15 @@ window.ADGATE = (() => {
 
   function unlockDownload() {
     if (btnUnlock) {
-      btnUnlock.disabled = false;
+      btnUnlock.classList.remove('disabled');
+      btnUnlock.setAttribute('href', ADSTERRA_DIRECT_LINK);
+      btnUnlock.setAttribute('target', '_blank');
+      btnUnlock.setAttribute('rel', 'noopener noreferrer');
+      btnUnlock.style.pointerEvents = 'auto';
+      btnUnlock.style.opacity = '1';
+      btnUnlock.style.cursor = 'pointer';
       btnUnlock.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+      btnUnlock.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
       btnUnlock.innerHTML = `
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
