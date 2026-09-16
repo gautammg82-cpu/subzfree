@@ -23,14 +23,30 @@ const EXPORT = (() => {
       onProgress(0, 'Setting up render...');
 
       const duration = video.duration;
-      const w = video.videoWidth  || 1280;
-      const h = video.videoHeight || 720;
+      let w = video.videoWidth  || 1280;
+      let h = video.videoHeight || 720;
+
+      // Force Target Resolution
+      const resBtn = document.querySelector('.res-btn.active');
+      const targetRes = resBtn ? resBtn.dataset.res : '1080';
+      const isPortrait = h > w;
+      
+      if (targetRes === '4k') {
+        w = isPortrait ? 2160 : 3840;
+        h = isPortrait ? 3840 : 2160;
+      } else if (targetRes === '1080') {
+        w = isPortrait ? 1080 : 1920;
+        h = isPortrait ? 1920 : 1080;
+      } else if (targetRes === '720') {
+        w = isPortrait ? 720 : 1280;
+        h = isPortrait ? 1280 : 720;
+      }
 
       // Create offscreen canvas for compositing video + captions
       const offCanvas = document.createElement('canvas');
       offCanvas.width  = w;
       offCanvas.height = h;
-      const offCtx = offCanvas.getContext('2d');
+      const offCtx = offCanvas.getContext('2d', { alpha: false }); // Massive performance boost!
 
       // Dedicated transparent canvas for captions to prevent clearRect from erasing video!
       const captionCanvas = document.createElement('canvas');
