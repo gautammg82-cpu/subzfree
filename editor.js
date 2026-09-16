@@ -1274,10 +1274,8 @@
 
     } catch (err) {
       console.error('AI Whisper error:', err);
-      showToast(`Whisper error: ${err.message || err}. Try the 'Paste Script' tab for 100% exact words!`, 'error');
-      if (typeof openLyricsModal === 'function') {
-        setTimeout(() => openLyricsModal('whisper'), 1200);
-      }
+      showToast(`Whisper error: ${err.message || err}`, 'error');
+      setStatus(`❌ Whisper error: ${err.message || err}`);
     } finally {
       state.isGenerating = false;
       if (EL.generatingArea) EL.generatingArea.style.display = 'none';
@@ -2234,7 +2232,7 @@
           if (state.segments && state.segments.length > 0) {
             segments = TRANSCRIBE.updateCaptionsWithCorrectWords(state.segments, text, duration);
           } else {
-            segments = await TRANSCRIBE.syncCustomText(text, duration, state.videoFile);
+            segments = TRANSCRIBE.syncCustomText(text, duration);
           }
 
           recordState();

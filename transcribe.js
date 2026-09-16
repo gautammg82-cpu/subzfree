@@ -801,7 +801,9 @@ MANDATORY RULES:
 
     const domainPrompt = (requestedLang === 'hinglish')
       ? 'Namaste dosto, welcome back to this video! Aaj hum banayenge healthy recipe. Gravy, masala, daal, chawal, shimlamirch, paneer, like aur subscribe karna.'
-      : 'Namaste dosto, welcome to this video! Like and subscribe for more content.';
+      : (requestedLang === 'en')
+        ? 'Welcome to this video. Today we will discuss tips, tricks and strategies for creators.'
+        : 'Namaste dosto, welcome to this video! Like and subscribe for more content.';
 
     if (audioSlices && audioSlices.length > 0) {
       for (let sIdx = 0; sIdx < audioSlices.length; sIdx++) {
@@ -818,7 +820,6 @@ MANDATORY RULES:
         formData.append('timestamp_granularities[]', 'word');
         formData.append('timestamp_granularities[]', 'segment');
         formData.append('temperature', '0');
-        formData.append('condition_on_previous_text', 'false');
 
         if (requestedLang === 'hinglish') {
           formData.append('language', 'hi');
@@ -842,6 +843,12 @@ MANDATORY RULES:
             headers: { 'Authorization': `Bearer ${key}` },
             body: formData
           });
+        }
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          const errMsg = errData.error?.message || `Whisper API error (${res.status})`;
+          throw new Error(errMsg);
         }
 
         if (res.ok) {
@@ -898,7 +905,6 @@ MANDATORY RULES:
       formData.append('timestamp_granularities[]', 'word');
       formData.append('timestamp_granularities[]', 'segment');
       formData.append('temperature', '0');
-      formData.append('condition_on_previous_text', 'false');
 
       if (requestedLang === 'hinglish') {
         formData.append('language', 'hi');
@@ -961,7 +967,10 @@ MANDATORY RULES:
       throw new Error('Whisper transcribed empty speech. Check if video has clear audio.');
     }
 
-    const isHinglishTarget = (requestedLang === 'hinglish' || requestedLang === 'auto');
+    // Only apply Hinglish conversion when user EXPLICITLY chose 'hinglish'
+    // Do NOT apply for 'auto' — auto-detected language could be English, Punjabi, Tamil etc.
+    // Applying Hinglish transliteration to non-Hindi speech corrupts captions badly!
+    const isHinglishTarget = (requestedLang === 'hinglish');
 
     // Step 2: High-Accuracy Hinglish Conversion with 100% Timestamp Preservation
     if (isHinglishTarget && segments.length > 0) {
