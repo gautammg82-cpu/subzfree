@@ -2232,7 +2232,7 @@
           if (state.segments && state.segments.length > 0) {
             segments = TRANSCRIBE.updateCaptionsWithCorrectWords(state.segments, text, duration);
           } else {
-            segments = await TRANSCRIBE.syncCustomText(text, duration, state.videoFile);
+            segments = TRANSCRIBE.syncCustomText(text, duration);
           }
 
           recordState();

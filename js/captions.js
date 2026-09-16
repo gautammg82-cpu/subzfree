@@ -60,7 +60,10 @@ const CAPTIONS = (() => {
   }
 
   function clearCanvas(ctx, canvas) {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
   }
 
   const BASE = {
@@ -1623,7 +1626,440 @@ const CAPTIONS = (() => {
 
 
 
+    // ── BATCH 7 - DYNAMIC TEMPLATES (Aesthetic Layouts) ─────────────────────────────────
+
+  function aestheticShorter(ctx, canvas, words, t) {
+    clearCanvas(ctx, canvas);
+    const seg = getActiveSegment(window.__SUBZFREE_SEGMENTS__ || [], t);
+    if (!seg) return;
+
+    let ai = seg.words.findIndex(w => t >= w.start && t <= w.end + 0.05);
+    if (ai < 0) ai = 0;
+    
+    const aboveText = seg.words.slice(0, ai).map(w => w.word).join(' ');
+    const activeWord = seg.words[ai].word;
+    const belowText = seg.words.slice(ai + 1).map(w => w.word).join(' ');
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.78;
+
+    const smFs   = canvas.height * 0.035;
+    const heroFs = canvas.height * 0.11;
+    const smFont   = `700 ${smFs}px 'Inter', sans-serif`;
+    const heroFont = `900 ${heroFs}px 'Inter', sans-serif`;
+
+    const heroY = cy;
+    const topY  = heroY - heroFs * 0.9;
+    const botY  = heroY + smFs * 1.6;
+
+    if (aboveText) {
+      ctx.font = smFont;
+      const aw = ctx.measureText(aboveText).width;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 6;
+      ctx.fillText(aboveText, cx - aw / 2, topY);
+      ctx.shadowBlur = 0;
+    }
+
+    ctx.font = heroFont;
+    const hw = ctx.measureText(activeWord).width;
+    ctx.fillStyle = '#00F5FF';
+    ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 10;
+    ctx.fillText(activeWord, cx - hw / 2, heroY);
+    ctx.shadowBlur = 0;
+
+    if (belowText) {
+      ctx.font = smFont;
+      const bw = ctx.measureText(belowText).width;
+      ctx.fillStyle = '#FFD700';
+      ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 6;
+      ctx.fillText(belowText, cx - bw / 2, botY);
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  function opportunityStarts(ctx, canvas, words, t) {
+    clearCanvas(ctx, canvas);
+    const seg = getActiveSegment(window.__SUBZFREE_SEGMENTS__ || [], t);
+    if (!seg) return;
+
+    let ai = seg.words.findIndex(w => t >= w.start && t <= w.end + 0.05);
+    if (ai < 0) ai = 0;
+
+    const fs = canvas.height * 0.055;
+    const font = `800 ${fs}px 'Inter', sans-serif`;
+    ctx.font = font;
+
+    const cx = canvas.width / 2;
+    const baseY = canvas.height * 0.8;
+    const maxW = canvas.width * 0.85;
+
+    const lines = wrapWords(ctx, seg.words, maxW, font);
+    const lh = fs * 1.3;
+    let y = baseY - (lines.length - 1) * lh * 0.5;
+
+    lines.forEach(lineWords => {
+      const lineStr = lineWords.map(w => w.word).join(' ');
+      const lineW = ctx.measureText(lineStr).width;
+      let x = cx - lineW / 2;
+
+      lineWords.forEach((w, i) => {
+        const wText = w.word + (i < lineWords.length - 1 ? ' ' : '');
+        const wW = ctx.measureText(wText).width;
+        const active = t >= w.start && t <= w.end + 0.05;
+
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 6;
+        if (active) {
+          ctx.fillStyle = '#FFD700';
+          ctx.font = `900 ${fs * 1.1}px 'Inter', sans-serif`;
+          ctx.fillText(wText, x, y);
+          ctx.font = font;
+        } else {
+          ctx.fillStyle = '#00F5FF';
+          if (i % 2 === 0) ctx.fillStyle = '#FFFFFF';
+          ctx.fillText(wText, x, y);
+        }
+        ctx.shadowBlur = 0;
+        x += wW;
+      });
+      y += lh;
+    });
+  }
+
+  function logicBehindIt(ctx, canvas, words, t) {
+    clearCanvas(ctx, canvas);
+    const seg = getActiveSegment(window.__SUBZFREE_SEGMENTS__ || [], t);
+    if (!seg) return;
+    
+    let ai = seg.words.findIndex(w => t >= w.start && t <= w.end + 0.05);
+    if (ai < 0) ai = 0;
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.8;
+
+    const smFs = canvas.height * 0.035;
+    const heroFs = canvas.height * 0.07;
+    
+    const smFont = `700 ${smFs}px 'Inter', sans-serif`;
+    const heroFont = `italic 700 ${heroFs}px 'Georgia', serif`;
+
+    const aboveText = seg.words.slice(0, ai).map(w => w.word).join(' ');
+    const activeWord = seg.words[ai].word;
+    const belowText = seg.words.slice(ai + 1).map(w => w.word).join(' ');
+
+    const topY = cy - heroFs * 0.8;
+    const heroY = cy;
+    const botY = cy + smFs * 1.5;
+
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur = 8;
+
+    if (aboveText) {
+      ctx.font = smFont;
+      const aw = ctx.measureText(aboveText).width;
+      ctx.fillStyle = '#00F5FF';
+      ctx.fillText(aboveText, cx - aw / 2, topY);
+    }
+
+    ctx.font = heroFont;
+    const hw = ctx.measureText(activeWord).width;
+    ctx.fillStyle = '#D4FF00';
+    ctx.fillText(activeWord, cx - hw / 2, heroY);
+
+    if (belowText) {
+      ctx.font = smFont;
+      const bw = ctx.measureText(belowText).width;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText(belowText, cx - bw / 2, botY);
+    }
+    ctx.shadowBlur = 0;
+  }
+
+  function cyanCenterPop(ctx, canvas, words, t) {
+    clearCanvas(ctx, canvas);
+    const seg = getActiveSegment(window.__SUBZFREE_SEGMENTS__ || [], t);
+    if (!seg) return;
+
+    let ai = seg.words.findIndex(w => t >= w.start && t <= w.end + 0.05);
+    if (ai < 0) ai = 0;
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.78;
+
+    const smFs = canvas.height * 0.04;
+    const heroFs = canvas.height * 0.09;
+    const fontStr = `'Montserrat', 'Inter', sans-serif`;
+
+    const aboveText = seg.words.slice(0, ai).map(w => w.word).join(' ');
+    const activeWord = seg.words[ai].word;
+    const belowText = seg.words.slice(ai + 1).map(w => w.word).join(' ');
+
+    ctx.font = `600 ${smFs}px ${fontStr}`;
+    const aw = ctx.measureText(aboveText ? aboveText + ' ' : '').width;
+    const bw = ctx.measureText(belowText ? ' ' + belowText : '').width;
+    ctx.font = `900 ${heroFs}px ${fontStr}`;
+    const hw = ctx.measureText(activeWord).width;
+
+    const totalW = aw + hw + bw;
+    let startX = cx - totalW / 2;
+
+    ctx.shadowColor = 'rgba(0,0,0,0.8)';
+    ctx.shadowBlur = 8;
+
+    ctx.font = `600 ${smFs}px ${fontStr}`;
+    ctx.fillStyle = '#FFD700';
+    if (aboveText) {
+      ctx.fillText(aboveText + ' ', startX, cy);
+      startX += aw;
+    }
+
+    ctx.font = `900 ${heroFs}px ${fontStr}`;
+    ctx.fillStyle = '#00F5FF';
+    ctx.fillText(activeWord, startX, cy);
+    startX += hw;
+
+    ctx.font = `600 ${smFs}px ${fontStr}`;
+    ctx.fillStyle = '#FFFFFF';
+    if (belowText) {
+      ctx.fillText(' ' + belowText, startX, cy);
+    }
+    ctx.shadowBlur = 0;
+  }
+
+  function nobodyTalks(ctx, canvas, words, t) {
+    clearCanvas(ctx, canvas);
+    const seg = getActiveSegment(window.__SUBZFREE_SEGMENTS__ || [], t);
+    if (!seg) return;
+
+    let ai = seg.words.findIndex(w => t >= w.start && t <= w.end + 0.05);
+    if (ai < 0) ai = 0;
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.82;
+
+    const smFs = canvas.height * 0.03;
+    const heroFs = canvas.height * 0.1;
+    const fontStr = `'Space Grotesk', sans-serif`;
+
+    const activeWord = seg.words[ai].word;
+    const contextText = seg.words.filter((_, i) => i !== ai).map(w => w.word).join(' ');
+
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur = 8;
+
+    ctx.font = `600 ${smFs}px ${fontStr}`;
+    const tw = ctx.measureText(contextText).width;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(contextText, cx - tw / 2, cy - heroFs * 0.85);
+
+    ctx.font = `900 ${heroFs}px ${fontStr}`;
+    const hw = ctx.measureText(activeWord).width;
+    ctx.fillStyle = '#00F5FF';
+    ctx.fillText(activeWord, cx - hw / 2, cy);
+
+    ctx.shadowBlur = 0;
+  }
+
+  function artificialIntelligence(ctx, canvas, words, t) {
+    aestheticShorter(ctx, canvas, words, t);
+  }
+
+  function redWrongPlace(ctx, canvas, words, t) {
+    clearCanvas(ctx, canvas);
+    const seg = getActiveSegment(window.__SUBZFREE_SEGMENTS__ || [], t);
+    if (!seg) return;
+
+    let ai = seg.words.findIndex(w => t >= w.start && t <= w.end + 0.05);
+    if (ai < 0) ai = 0;
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.8;
+
+    const smFs = canvas.height * 0.045;
+    const heroFs = canvas.height * 0.08;
+    const fontStr = `'Inter', sans-serif`;
+
+    const aboveText = seg.words.slice(0, ai).map(w => w.word).join(' ');
+    const activeWord = seg.words[ai].word;
+    const belowText = seg.words.slice(ai + 1).map(w => w.word).join(' ');
+
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur = 8;
+
+    ctx.font = `700 ${smFs}px ${fontStr}`;
+    const aw = ctx.measureText(aboveText ? aboveText + ' ' : '').width;
+    ctx.font = `900 ${heroFs}px ${fontStr}`;
+    const hw = ctx.measureText(activeWord).width;
+    ctx.font = `700 ${smFs}px ${fontStr}`;
+    const bw = ctx.measureText(belowText ? ' ' + belowText : '').width;
+
+    const totalW = aw + hw + bw;
+    let startX = cx - totalW / 2;
+    
+    ctx.fillStyle = '#00F5FF';
+    if (aboveText) {
+      ctx.fillText(aboveText + ' ', startX, cy);
+      startX += aw;
+    }
+    ctx.font = `900 ${heroFs}px ${fontStr}`;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(activeWord, startX, cy);
+    startX += hw;
+    ctx.font = `700 ${smFs}px ${fontStr}`;
+    ctx.fillStyle = '#FF2E2E';
+    if (belowText) {
+      ctx.fillText(' ' + belowText, startX, cy);
+    }
+    ctx.shadowBlur = 0;
+  }
+
+  function serifNumbers(ctx, canvas, words, t) {
+    clearCanvas(ctx, canvas);
+    const seg = getActiveSegment(window.__SUBZFREE_SEGMENTS__ || [], t);
+    if (!seg) return;
+
+    let ai = seg.words.findIndex(w => t >= w.start && t <= w.end + 0.05);
+    if (ai < 0) ai = 0;
+
+    const activeWord = seg.words[ai].word;
+    const restText = seg.words.filter((_, i) => i !== ai).map(w => w.word).join(' ');
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.8;
+
+    const heroFs = canvas.height * 0.13;
+    const smFs = canvas.height * 0.035;
+
+    ctx.font = `italic 700 ${heroFs}px 'Playfair Display', 'Georgia', serif`;
+    const hw = ctx.measureText(activeWord).width;
+
+    ctx.font = `600 ${smFs}px 'Inter', sans-serif`;
+    const sw = ctx.measureText(' ' + restText).width;
+
+    const totalW = hw + sw;
+    let startX = cx - totalW / 2;
+
+    ctx.font = `italic 700 ${heroFs}px 'Playfair Display', 'Georgia', serif`;
+    ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+    ctx.shadowBlur = 15;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(activeWord, startX, cy);
+    startX += hw;
+
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.font = `600 ${smFs}px 'Inter', sans-serif`;
+    ctx.fillStyle = '#00F5FF';
+    ctx.fillText(' ' + restText, startX, cy);
+    ctx.shadowBlur = 0;
+  }
+
+  function beginnersMiss(ctx, canvas, words, t) {
+    clearCanvas(ctx, canvas);
+    const seg = getActiveSegment(window.__SUBZFREE_SEGMENTS__ || [], t);
+    if (!seg) return;
+
+    let ai = seg.words.findIndex(w => t >= w.start && t <= w.end + 0.05);
+    if (ai < 0) ai = 0;
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.78;
+
+    const smFs = canvas.height * 0.04;
+    const heroFs = canvas.height * 0.09;
+    const fontStr = `'Inter', sans-serif`;
+
+    const aboveText = seg.words.slice(0, ai).map(w => w.word).join(' ');
+    const activeWord = seg.words[ai].word;
+    const belowText = seg.words.slice(ai + 1).map(w => w.word).join(' ');
+
+    const topY = cy - heroFs * 0.8;
+    const heroY = cy;
+    const botY = cy + smFs * 1.5;
+
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur = 8;
+
+    const startX = cx - canvas.width * 0.3;
+
+    ctx.font = `700 ${smFs}px ${fontStr}`;
+    ctx.fillStyle = '#00F5FF';
+    if (aboveText) ctx.fillText(aboveText, startX, topY);
+
+    ctx.font = `900 ${heroFs}px ${fontStr}`;
+    ctx.fillStyle = '#FFD700';
+    ctx.fillText(activeWord, startX + canvas.width * 0.1, heroY);
+
+    ctx.font = `700 ${smFs}px ${fontStr}`;
+    ctx.fillStyle = '#FFFFFF';
+    if (belowText) ctx.fillText(belowText, startX + canvas.width * 0.15, botY);
+
+    ctx.shadowBlur = 0;
+  }
+
+  function missingPart(ctx, canvas, words, t) {
+    clearCanvas(ctx, canvas);
+    const seg = getActiveSegment(window.__SUBZFREE_SEGMENTS__ || [], t);
+    if (!seg) return;
+
+    let ai = seg.words.findIndex(w => t >= w.start && t <= w.end + 0.05);
+    if (ai < 0) ai = 0;
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.78;
+
+    const smFs = canvas.height * 0.035;
+    const heroFs = canvas.height * 0.08;
+    const fontStr = `'Inter', sans-serif`;
+
+    const aboveText = seg.words.slice(0, ai).map(w => w.word).join(' ');
+    const activeWord = seg.words[ai].word;
+    const belowText = seg.words.slice(ai + 1).map(w => w.word).join(' ');
+
+    const topY = cy - heroFs * 0.8;
+    const heroY = cy;
+    const botY = cy + smFs * 1.5;
+
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur = 8;
+
+    const endX = cx + canvas.width * 0.3;
+
+    ctx.font = `700 ${smFs}px ${fontStr}`;
+    ctx.fillStyle = '#FFFFFF';
+    if (aboveText) {
+      const aw = ctx.measureText(aboveText).width;
+      ctx.fillText(aboveText, endX - aw, topY);
+    }
+
+    ctx.font = `900 ${heroFs}px ${fontStr}`;
+    ctx.fillStyle = '#FFD700';
+    const hw = ctx.measureText(activeWord).width;
+    ctx.fillText(activeWord, endX - hw, heroY);
+
+    ctx.font = `700 ${smFs}px ${fontStr}`;
+    ctx.fillStyle = '#00F5FF';
+    if (belowText) {
+      const bw = ctx.measureText(belowText).width;
+      ctx.fillText(belowText, endX - bw, botY);
+    }
+
+    ctx.shadowBlur = 0;
+  }
+
+
   const STYLES = {
+    'aesthetic-shorter': aestheticShorter,
+    'opportunity-starts': opportunityStarts,
+    'logic-behind-it': logicBehindIt,
+    'cyan-center-pop': cyanCenterPop,
+    'nobody-talks': nobodyTalks,
+    'artificial-intelligence': artificialIntelligence,
+    'red-wrong-place': redWrongPlace,
+    'serif-numbers': serifNumbers,
+    'beginners-miss': beginnersMiss,
+    'missing-part': missingPart,
     'hormozi':       hormozi,
     'word-pop':      wordPop,
     'bubble':        bubble,
@@ -3160,3 +3596,4 @@ const CAPTIONS = (() => {
 
   return { draw, STYLES: Object.keys(STYLES) };
 })();
+

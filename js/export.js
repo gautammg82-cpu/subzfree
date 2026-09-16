@@ -23,19 +23,44 @@ const EXPORT = (() => {
       onProgress(0, 'Setting up render...');
 
       const duration = video.duration;
-      const w = video.videoWidth  || 1280;
-      const h = video.videoHeight || 720;
+      let w = video.videoWidth  || 1280;
+      let h = video.videoHeight || 720;
 
-      // Create offscreen canvas for compositing
+      // Force Target Resolution
+      const resBtn = document.querySelector('.res-btn.active');
+      const targetRes = resBtn ? resBtn.dataset.res : '1080';
+      const isPortrait = h > w;
+      
+      if (targetRes === '4k') {
+        w = isPortrait ? 2160 : 3840;
+        h = isPortrait ? 3840 : 2160;
+      } else if (targetRes === '1080') {
+        w = isPortrait ? 1080 : 1920;
+        h = isPortrait ? 1920 : 1080;
+      } else if (targetRes === '720') {
+        w = isPortrait ? 720 : 1280;
+        h = isPortrait ? 1280 : 720;
+      }
+
+      // Create offscreen canvas for compositing video + captions
       const offCanvas = document.createElement('canvas');
       offCanvas.width  = w;
       offCanvas.height = h;
-      const offCtx = offCanvas.getContext('2d');
+      const offCtx = offCanvas.getContext('2d', { alpha: false }); // Massive performance boost!
+
+      // Dedicated transparent canvas for captions to prevent clearRect from erasing video!
+      const captionCanvas = document.createElement('canvas');
+      captionCanvas.width  = w;
+      captionCanvas.height = h;
+      const captionCtx = captionCanvas.getContext('2d');
 
       // Try to capture video stream + set up MediaRecorder
       let recorder, chunks = [];
-      let mimeType = 'video/webm;codecs=vp9';
+      let mimeType = 'video/mp4;codecs=avc1';
 
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'video/webm;codecs=vp9';
+      }
       if (!MediaRecorder.isTypeSupported(mimeType)) {
         mimeType = 'video/webm;codecs=vp8';
       }
@@ -57,7 +82,7 @@ const EXPORT = (() => {
 
       recorder = new MediaRecorder(stream, {
         mimeType,
-        videoBitsPerSecond: 4_000_000,
+        videoBitsPerSecond: 15_000_000,
       });
 
       recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
@@ -81,8 +106,10 @@ const EXPORT = (() => {
       const frameMs = 1000 / fps;
       let   lastPct = 0;
 
-      // Render loop: draw video frame + captions onto offCanvas
-      const renderLoop = setInterval(() => {
+      let isRendering = true;
+
+      // The core drawing logic for a single frame
+      function drawFrame() {
         const ct  = video.currentTime;
         const pct = Math.min(95, Math.round((ct / duration) * 90) + 5);
 
@@ -91,21 +118,50 @@ const EXPORT = (() => {
           onProgress(pct, `Rendering frame ${Math.round(ct)}s / ${Math.round(duration)}s`);
         }
 
-        // Draw video frame
+        // 1. Draw video frame onto offCanvas
         offCtx.drawImage(video, 0, 0, w, h);
 
-        // Draw captions
+        // 2. Clear transparent caption layer
+        captionCtx.clearRect(0, 0, w, h);
+
+        // 3. Draw captions onto transparent layer
         window.__SUBZFREE_SEGMENTS__ = segments;
-        CAPTIONS.draw(styleName, offCtx, offCanvas, segments, ct);
+        CAPTIONS.draw(styleName, captionCtx, captionCanvas, segments, ct);
+
+        // 4. Composite transparent captions cleanly on top of video frame
+        offCtx.drawImage(captionCanvas, 0, 0, w, h);
 
         // If video ended
         if (video.ended || ct >= duration - 0.05) {
-          clearInterval(renderLoop);
+          isRendering = false;
           video.pause();
           recorder.stop();
           onProgress(100, 'Finalizing...');
         }
-      }, frameMs);
+      }
+
+      // 100% Perfectly synced loop (Only draws when a NEW video frame is ready)
+      function renderLoopVFC(now, metadata) {
+        if (!isRendering) return;
+        drawFrame();
+        if (isRendering && 'requestVideoFrameCallback' in video) {
+          video.requestVideoFrameCallback(renderLoopVFC);
+        }
+      }
+
+      // Fallback loop (Draws at monitor refresh rate, e.g. 60fps)
+      function renderLoopRAF() {
+        if (!isRendering) return;
+        requestAnimationFrame(renderLoopRAF);
+        drawFrame();
+      }
+
+      // Start the smartest possible render loop
+      if ('requestVideoFrameCallback' in video) {
+        video.requestVideoFrameCallback(renderLoopVFC);
+      } else {
+        requestAnimationFrame(renderLoopRAF);
+      }
 
     } catch (err) {
       console.error('Export error:', err);
