@@ -40,8 +40,11 @@ const EXPORT = (() => {
 
       // Try to capture video stream + set up MediaRecorder
       let recorder, chunks = [];
-      let mimeType = 'video/webm;codecs=vp9';
+      let mimeType = 'video/mp4;codecs=avc1';
 
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'video/webm;codecs=vp9';
+      }
       if (!MediaRecorder.isTypeSupported(mimeType)) {
         mimeType = 'video/webm;codecs=vp8';
       }
@@ -63,7 +66,7 @@ const EXPORT = (() => {
 
       recorder = new MediaRecorder(stream, {
         mimeType,
-        videoBitsPerSecond: 4_000_000,
+        videoBitsPerSecond: 15_000_000,
       });
 
       recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
@@ -87,8 +90,10 @@ const EXPORT = (() => {
       const frameMs = 1000 / fps;
       let   lastPct = 0;
 
-      // Render loop: draw video frame + captions onto offCanvas
-      const renderLoop = setInterval(() => {
+      let isRendering = true;
+
+      // The core drawing logic for a single frame
+      function drawFrame() {
         const ct  = video.currentTime;
         const pct = Math.min(95, Math.round((ct / duration) * 90) + 5);
 
@@ -112,12 +117,35 @@ const EXPORT = (() => {
 
         // If video ended
         if (video.ended || ct >= duration - 0.05) {
-          clearInterval(renderLoop);
+          isRendering = false;
           video.pause();
           recorder.stop();
           onProgress(100, 'Finalizing...');
         }
-      }, frameMs);
+      }
+
+      // 100% Perfectly synced loop (Only draws when a NEW video frame is ready)
+      function renderLoopVFC(now, metadata) {
+        if (!isRendering) return;
+        drawFrame();
+        if (isRendering && 'requestVideoFrameCallback' in video) {
+          video.requestVideoFrameCallback(renderLoopVFC);
+        }
+      }
+
+      // Fallback loop (Draws at monitor refresh rate, e.g. 60fps)
+      function renderLoopRAF() {
+        if (!isRendering) return;
+        requestAnimationFrame(renderLoopRAF);
+        drawFrame();
+      }
+
+      // Start the smartest possible render loop
+      if ('requestVideoFrameCallback' in video) {
+        video.requestVideoFrameCallback(renderLoopVFC);
+      } else {
+        requestAnimationFrame(renderLoopRAF);
+      }
 
     } catch (err) {
       console.error('Export error:', err);
