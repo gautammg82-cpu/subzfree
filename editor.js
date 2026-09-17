@@ -220,6 +220,7 @@
   }
 
   // ── History & Undo/Redo ────────────────────────────────────
+  window.__SUBZFREE_STATE__ = state;
   function recordState() {
     const snap = JSON.stringify(state.segments);
     if (state.historyIndex < state.history.length - 1) {

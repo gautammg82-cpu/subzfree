@@ -12,6 +12,18 @@
  */
 
 const CAPTIONS = (() => {
+  const formatWord = (w) => {
+    if (!w) return '';
+    return window.__SUBZFREE_FORCE_UPPER__ ? w.toUpperCase() : w;
+  };
+  const getStyle = (type, defaultVal) => {
+    if (type === 'font') return window.__SUBZFREE_CUSTOM_FONT__ || defaultVal;
+    if (type === 'primary') return window.__SUBZFREE_PRIMARY_COLOR__ || defaultVal;
+    if (type === 'active') return window.__SUBZFREE_HIGHLIGHT_COLOR__ || defaultVal;
+    if (type === 'stroke') return window.__SUBZFREE_STROKE_COLOR__ || defaultVal;
+    if (type === 'glow') return (window.__SUBZFREE_GLOW_INTENSITY__ !== undefined) ? window.__SUBZFREE_GLOW_INTENSITY__ : 1;
+    return defaultVal;
+  };
 
   // ── Shared helpers ──────────────────────────────────────────
 
@@ -92,7 +104,7 @@ const CAPTIONS = (() => {
     let baseY   = canvas.height * 0.8 - (lines.length - 1) * lh * 0.5;
 
     lines.forEach(lineWords => {
-      const lineStr = lineWords.map(w => w.word).join(' ');
+      const lineStr = lineWords.map(w => formatWord(w.word)).join(' ');
       ctx.font = font;
       const lineW = ctx.measureText(lineStr).width;
       let x = (canvas.width - lineW) / 2;
@@ -105,20 +117,20 @@ const CAPTIONS = (() => {
 
         if (active) {
           const pad = fs * 0.15;
-          ctx.fillStyle = '#FFD700';
+          ctx.fillStyle = getStyle('active', '#FFD700');
           ctx.beginPath();
           ctx.roundRect(x - pad, y - fs * 0.9, wW + pad * 2, fs * 1.1, 4);
           ctx.fill();
           ctx.fillStyle = '#000';
         } else {
-          ctx.fillStyle = '#fff';
-          ctx.shadowColor = 'rgba(0,0,0,0.8)';
-          ctx.shadowBlur  = 6;
+          ctx.fillStyle = getStyle('primary', '#FFFFFF');
+          ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.8)");;
+          ctx.shadowBlur = 6 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         }
 
         ctx.font = font;
         ctx.fillText(wText, x, y);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         x += wW;
       });
       baseY += lh;
@@ -143,7 +155,7 @@ const CAPTIONS = (() => {
     let baseY   = canvas.height * 0.8 - (lines.length - 1) * lh * 0.5;
 
     lines.forEach(lineWords => {
-      const lineStr = lineWords.map(w => w.word).join(' ');
+      const lineStr = lineWords.map(w => formatWord(w.word)).join(' ');
       const lineW   = ctx.measureText(lineStr + ' '.repeat(lineWords.length - 1)).width;
       let x = (canvas.width - lineW) / 2;
       const y = baseY;
@@ -214,13 +226,13 @@ const CAPTIONS = (() => {
         ctx.fill();
 
         if (active) {
-          ctx.shadowColor = 'rgba(139,92,246,0.7)';
-          ctx.shadowBlur  = 14;
+          ctx.shadowColor = getStyle('stroke', "rgba(139,92,246,0.7)");;
+          ctx.shadowBlur = 14 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
           ctx.fill();
-          ctx.shadowBlur  = 0;
+          ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         }
 
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = getStyle('primary', '#FFFFFF');
         ctx.font = font;
         ctx.fillText(wText, x, baseY);
         x += wW;
@@ -318,7 +330,7 @@ const CAPTIONS = (() => {
         for (let g = 0; g < (active ? 3 : 1); g++) {
           ctx.fillText(wText, x, baseY);
         }
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         x += wW;
       });
       baseY += lh;
@@ -357,16 +369,16 @@ const CAPTIONS = (() => {
           grad.addColorStop(1,   '#FF0000');
           ctx.fillStyle   = grad;
           ctx.shadowColor = '#FF4500';
-          ctx.shadowBlur  = 18;
+          ctx.shadowBlur = 18 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         } else {
           ctx.fillStyle   = 'rgba(255,255,255,0.75)';
-          ctx.shadowColor = 'rgba(0,0,0,0.6)';
-          ctx.shadowBlur  = 5;
+          ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.6)");;
+          ctx.shadowBlur = 5 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         }
 
         ctx.font = font;
         ctx.fillText(wText, x, baseY);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         x += wW;
       });
       baseY += lh;
@@ -406,7 +418,7 @@ const CAPTIONS = (() => {
           ctx.fillText(wText, x - 3 + offset, baseY);
           ctx.fillStyle = 'rgba(255,0,255,0.8)';
           ctx.fillText(wText, x + 3 - offset, baseY);
-          ctx.fillStyle = '#fff';
+          ctx.fillStyle = getStyle('primary', '#FFFFFF');
           ctx.fillText(wText, x, baseY);
         } else {
           ctx.fillStyle = 'rgba(0,255,255,0.5)';
@@ -448,16 +460,16 @@ const CAPTIONS = (() => {
           const grad = ctx.createLinearGradient(x, 0, x + wW, 0);
           colors.forEach((c, ci) => grad.addColorStop(ci / (colors.length - 1), c));
           ctx.fillStyle   = grad;
-          ctx.shadowColor = 'rgba(255,255,255,0.5)';
-          ctx.shadowBlur  = 8;
+          ctx.shadowColor = getStyle('stroke', "rgba(255,255,255,0.5)");;
+          ctx.shadowBlur = 8 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         } else {
           ctx.fillStyle   = 'rgba(255,255,255,0.55)';
-          ctx.shadowBlur  = 0;
+          ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         }
 
         ctx.font = font;
         ctx.fillText(wText, x, baseY);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         x += wW;
       });
       baseY += lh;
@@ -492,16 +504,16 @@ const CAPTIONS = (() => {
         ctx.font = font;
         if (active) {
           ctx.shadowColor = '#8B5CF6';
-          ctx.shadowBlur  = 25;
+          ctx.shadowBlur = 25 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
           ctx.fillStyle   = '#fff';
           for (let g = 0; g < 3; g++) ctx.fillText(wText, x, baseY);
         } else {
-          ctx.shadowColor = 'rgba(0,0,0,0.8)';
-          ctx.shadowBlur  = 4;
+          ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.8)");;
+          ctx.shadowBlur = 4 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
           ctx.fillStyle   = 'rgba(255,255,255,0.65)';
           ctx.fillText(wText, x, baseY);
         }
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         x += wW;
       });
       baseY += lh;
@@ -529,7 +541,7 @@ const CAPTIONS = (() => {
       let x = (canvas.width - lineW) / 2;
 
       lineWords.forEach((w, i) => {
-        const wText  = w.word.toUpperCase() + (i < lineWords.length - 1 ? ' ' : '');
+        const wText  = formatWord(w.word) + (i < lineWords.length - 1 ? ' ' : '');
         const wW     = ctx.measureText(wText).width;
         const active = t >= w.start && t <= w.end + 0.05;
 
@@ -575,16 +587,16 @@ const CAPTIONS = (() => {
 
         ctx.font = font;
         if (active) {
-          ctx.fillStyle = '#FFD700';
+          ctx.fillStyle = getStyle('active', '#FFD700');
           ctx.fillRect(x - 2, baseY - fs * 0.85, wW + 4, fs * 1.05);
           ctx.fillStyle = '#000';
         } else {
-          ctx.fillStyle = '#fff';
-          ctx.shadowColor = 'rgba(0,0,0,0.8)';
-          ctx.shadowBlur  = 5;
+          ctx.fillStyle = getStyle('primary', '#FFFFFF');
+          ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.8)");;
+          ctx.shadowBlur = 5 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         }
         ctx.fillText(wText, x, baseY);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         x += wW;
       });
       baseY += lh;
@@ -608,16 +620,16 @@ const CAPTIONS = (() => {
     let baseY   = canvas.height * 0.82 - (lines.length - 1) * lh * 0.5;
 
     lines.forEach(lineWords => {
-      const lineStr = lineWords.map(w => w.word).join(' ');
+      const lineStr = lineWords.map(w => formatWord(w.word)).join(' ');
       const lineW   = ctx.measureText(lineStr).width;
-      ctx.shadowColor = 'rgba(0,0,0,0.9)';
-      ctx.shadowBlur  = 8;
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.9)");;
+      ctx.shadowBlur = 8 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2;
-      ctx.fillStyle = '#fff';
+      ctx.fillStyle = getStyle('primary', '#FFFFFF');
       ctx.font = font;
       ctx.fillText(lineStr, (canvas.width - lineW) / 2, baseY);
       ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       baseY += lh;
     });
   }
@@ -640,14 +652,14 @@ const CAPTIONS = (() => {
     let baseY   = canvas.height * 0.82 - (lines.length - 1) * lh * 0.5;
 
     lines.forEach(lineWords => {
-      const lineStr = lineWords.map(w => w.word.toUpperCase()).join('  ');
+      const lineStr = lineWords.map(w => formatWord(w.word)).join('  ');
       const lineW   = ctx.measureText(lineStr).width;
       ctx.fillStyle   = 'rgba(229,231,235,0.92)';
-      ctx.shadowColor = 'rgba(0,0,0,0.95)';
-      ctx.shadowBlur  = 10;
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.95)");;
+      ctx.shadowBlur = 10 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.font = font;
       ctx.fillText(lineStr, (canvas.width - lineW) / 2, baseY);
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       baseY += lh;
     });
     ctx.letterSpacing = '0';
@@ -687,7 +699,7 @@ const CAPTIONS = (() => {
         ctx.shadowBlur  = active ? 12 : 4;
         ctx.fillStyle   = active ? '#00FF41' : 'rgba(0,255,65,0.45)';
         ctx.fillText(wText, x, baseY);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         x += wW;
       });
       baseY += lh;
@@ -772,7 +784,7 @@ const CAPTIONS = (() => {
         ctx.shadowBlur  = active ? 20 : 4;
         ctx.fillStyle   = active ? '#BAE6FD' : 'rgba(186,230,253,0.45)';
         ctx.fillText(wText, x, baseY);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         x += wW;
       });
       baseY += lh;
@@ -796,7 +808,7 @@ const CAPTIONS = (() => {
     let baseY   = canvas.height * 0.83 - (lines.length - 1) * lh * 0.5;
 
     lines.forEach(lineWords => {
-      const lineStr = lineWords.map(w => w.word).join(' ');
+      const lineStr = lineWords.map(w => formatWord(w.word)).join(' ');
       const lineW   = ctx.measureText(lineStr).width;
       ctx.fillStyle   = 'rgba(255,255,255,0.88)';
       ctx.font = font;
@@ -827,7 +839,7 @@ const CAPTIONS = (() => {
     // Measure block width
     let maxLW = 0;
     lines.forEach(lw => {
-      const w = ctx.measureText(lw.map(w => w.word).join(' ')).width;
+      const w = ctx.measureText(lw.map(w => formatWord(w.word)).join(' ')).width;
       if (w > maxLW) maxLW = w;
     });
 
@@ -842,7 +854,7 @@ const CAPTIONS = (() => {
     ctx.fill();
 
     lines.forEach(lineWords => {
-      const lineStr = lineWords.map(w => w.word).join(' ');
+      const lineStr = lineWords.map(w => formatWord(w.word)).join(' ');
       const lineW   = ctx.measureText(lineStr).width;
       ctx.fillStyle   = '#fff';
       ctx.font = font;
@@ -868,11 +880,11 @@ const CAPTIONS = (() => {
     let baseY   = canvas.height * 0.8 - (lines.length - 1) * lh * 0.5;
 
     lines.forEach(lineWords => {
-      const lineW = lineWords.reduce((a, w, i) => a + ctx.measureText(w.word.toUpperCase() + (i < lineWords.length-1 ? ' ' : '')).width, 0);
+      const lineW = lineWords.reduce((a, w, i) => a + ctx.measureText(formatWord(w.word) + (i < lineWords.length-1 ? ' ' : '')).width, 0);
       let x = (canvas.width - lineW) / 2;
 
       lineWords.forEach((w, i) => {
-        const wText  = w.word.toUpperCase() + (i < lineWords.length - 1 ? ' ' : '');
+        const wText  = formatWord(w.word) + (i < lineWords.length - 1 ? ' ' : '');
         const wW     = ctx.measureText(wText).width;
         const active = t >= w.start && t <= w.end + 0.05;
 
@@ -884,7 +896,7 @@ const CAPTIONS = (() => {
         ctx.shadowColor = active ? '#FF4500' : 'transparent';
         ctx.shadowBlur  = active ? 16 : 0;
         ctx.fillText(wText, x, baseY);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         x += wW;
       });
       baseY += lh;
@@ -909,11 +921,11 @@ const CAPTIONS = (() => {
     const font = `800 ${fs}px 'Space Grotesk', sans-serif`;
     ctx.font   = font;
 
-    const text  = seg.words.map(w => w.word.toUpperCase()).join('  ');
+    const text  = seg.words.map(w => formatWord(w.word)).join('  ');
     const textW = ctx.measureText(text).width;
     const tx    = (canvas.width - textW) / 2;
 
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = getStyle('primary', '#FFFFFF');
     ctx.fillText(text, tx, by + barH * 0.68);
   }
 
@@ -970,18 +982,18 @@ const CAPTIONS = (() => {
         ctx.font = activeFont;
         ctx.fillStyle = 'rgba(0, 200, 255, 0.35)';
         ctx.fillText(it.text, x - 1, baseY);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.shadowColor = 'rgba(255, 255, 255, 0.9)';
-        ctx.shadowBlur = 10;
+        ctx.fillStyle = getStyle('primary', '#FFFFFF');
+        ctx.shadowColor = getStyle('stroke', "rgba(255, 255, 255, 0.9)");;
+        ctx.shadowBlur = 10 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         ctx.fillText(it.text, x, baseY);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       } else {
         ctx.font = normFont;
-        ctx.fillStyle = '#FFFFFF';
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-        ctx.shadowBlur = 6;
+        ctx.fillStyle = getStyle('primary', '#FFFFFF');
+        ctx.shadowColor = getStyle('stroke', "rgba(0, 0, 0, 0.8)");;
+        ctx.shadowBlur = 6 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         ctx.fillText(it.text, x, baseY);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       }
       x += it.tw + gap;
     });
@@ -1017,7 +1029,7 @@ const CAPTIONS = (() => {
         ctx.shadowColor = active ? 'rgba(139,92,246,0.8)' : 'transparent';
         ctx.shadowBlur  = active ? 12 : 0;
         ctx.fillText(wText, x, baseY);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         x += wW;
       });
       baseY += lh;
@@ -1038,11 +1050,11 @@ const CAPTIONS = (() => {
     const lh = fs * 1.35;
     let baseY = canvas.height * 0.8 - (lines.length - 1) * lh * 0.5;
     lines.forEach(lw => {
-      const s = lw.map(w => w.word).join(' ');
+      const s = lw.map(w => formatWord(w.word)).join(' ');
       const w = ctx.measureText(s).width;
-      ctx.shadowColor = 'rgba(139,92,246,0.9)';
-      ctx.shadowBlur  = 0; ctx.shadowOffsetX = 4; ctx.shadowOffsetY = 4;
-      ctx.fillStyle = '#fff';
+      ctx.shadowColor = getStyle('stroke', "rgba(139,92,246,0.9)");;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2; ctx.shadowOffsetX = 4; ctx.shadowOffsetY = 4;
+      ctx.fillStyle = getStyle('primary', '#FFFFFF');
       ctx.font = font;
       ctx.fillText(s, (canvas.width - w)/2, baseY);
       ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
@@ -1062,12 +1074,12 @@ const CAPTIONS = (() => {
     let baseY = canvas.height * 0.8 - (lines.length - 1) * lh * 0.5;
     lines.forEach(lw => {
       const lineW = lw.reduce((a, w, i) => a + ctx.measureText(w.word + (i<lw.length-1?' ':'')).width, 0);
-      ctx.fillStyle = '#FFD700';
+      ctx.fillStyle = getStyle('active', '#FFD700');
       ctx.fillRect((canvas.width - lineW)/2 - 8, baseY - fs - 6, lineW + 16, fs + 12);
       ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
       ctx.strokeRect((canvas.width - lineW)/2 - 8, baseY - fs - 6, lineW + 16, fs + 12);
       ctx.fillStyle = '#000'; ctx.font = font;
-      ctx.fillText(lw.map(w => w.word).join(' '), (canvas.width - lineW)/2, baseY);
+      ctx.fillText(lw.map(w => formatWord(w.word)).join(' '), (canvas.width - lineW)/2, baseY);
       baseY += lh;
     });
   }
@@ -1082,7 +1094,7 @@ const CAPTIONS = (() => {
     const lh = fs * 1.4;
     let baseY = canvas.height * 0.8 - (lines.length - 1) * lh * 0.5;
     lines.forEach(lw => {
-      const s = lw.map(w => w.word).join(' ');
+      const s = lw.map(w => formatWord(w.word)).join(' ');
       const lineW = ctx.measureText(s).width;
       ctx.fillStyle = 'rgba(42,26,10,0.85)';
       ctx.fillRect((canvas.width-lineW)/2-8, baseY-fs-4, lineW+16, fs+8);
@@ -1133,13 +1145,13 @@ const CAPTIONS = (() => {
     ctx.lineJoin    = 'round';
     ctx.font = bigFont;
     ctx.strokeText(bigText, centerX - bigW / 2, centerY);
-    ctx.fillStyle = '#FFD700';
+    ctx.fillStyle = getStyle('active', '#FFD700');
     ctx.fillText(bigText,   centerX - bigW / 2, centerY);
 
     // ── Remaining words (small, white, below) ──
     const restWords = seg.words
       .filter((_, i) => i !== activeIdx)
-      .map(w => w.word)
+      .map(w => formatWord(w.word))
       .join(' ');
 
     if (restWords.trim()) {
@@ -1149,10 +1161,10 @@ const CAPTIONS = (() => {
       const smW = ctx.measureText(restWords).width;
 
       ctx.fillStyle   = 'rgba(255,255,255,0.85)';
-      ctx.shadowColor = 'rgba(0,0,0,0.7)';
-      ctx.shadowBlur  = 6;
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.7)");;
+      ctx.shadowBlur = 6 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.fillText(restWords, centerX - smW / 2, centerY + bigFs * 0.72);
-      ctx.shadowBlur  = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     }
   }
 
@@ -1176,7 +1188,7 @@ const CAPTIONS = (() => {
     ctx.font         = topFont;
     ctx.letterSpacing = '0.22em';
 
-    const topText = seg.words.map(w => w.word.toUpperCase()).join('  ');
+    const topText = seg.words.map(w => formatWord(w.word)).join('  ');
     const topW    = ctx.measureText(topText).width;
     const topY    = canvas.height * 0.72;
 
@@ -1187,7 +1199,7 @@ const CAPTIONS = (() => {
     // ── BOTTOM LINE — active word(s), big & bright ──
     const activeWords = seg.words
       .filter(w => t >= w.start && t <= w.end + 0.1)
-      .map(w => w.word.toUpperCase())
+      .map(w => formatWord(w.word))
       .join('  ');
 
     const displayText = activeWords || seg.words[0].word.toUpperCase();
@@ -1201,11 +1213,11 @@ const CAPTIONS = (() => {
     const botY = topY + topFs * 1.9;
 
     // Subtle glow
-    ctx.shadowColor = 'rgba(160,180,255,0.35)';
-    ctx.shadowBlur  = 18;
+    ctx.shadowColor = getStyle('stroke', "rgba(160,180,255,0.35)");;
+    ctx.shadowBlur = 18 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     ctx.fillStyle   = '#FFFFFF';
     ctx.fillText(displayText, centerX - botW / 2, botY);
-    ctx.shadowBlur    = 0;
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     ctx.letterSpacing = '0';
   }
 
@@ -1277,7 +1289,7 @@ const CAPTIONS = (() => {
 
     // Text — word-by-word coloring
     const lineWords = seg.words;
-    const lineStr   = lineWords.map(w => w.word).join(' ');
+    const lineStr   = lineWords.map(w => formatWord(w.word)).join(' ');
     const lineStrW  = ctx.measureText(lineStr).width;
     let   x         = centerX - lineStrW / 2;
     const textY     = centerY + fs * 0.35;
@@ -1290,11 +1302,11 @@ const CAPTIONS = (() => {
       ctx.font      = font;
       ctx.fillStyle = active ? '#FFFFFF' : 'rgba(200,210,240,0.65)';
       if (active) {
-        ctx.shadowColor = 'rgba(255,255,255,0.5)';
-        ctx.shadowBlur  = 8;
+        ctx.shadowColor = getStyle('stroke', "rgba(255,255,255,0.5)");;
+        ctx.shadowBlur = 8 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       }
       ctx.fillText(chunk, x, textY);
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       x += chunkW;
     });
   }
@@ -1314,7 +1326,7 @@ const CAPTIONS = (() => {
     const centerX = canvas.width  / 2;
 
     // ── TOP: dim underscore-joined label ──
-    const topText = seg.words.map(w => w.word.toUpperCase()).join('_');
+    const topText = seg.words.map(w => formatWord(w.word)).join('_');
     const topFs   = canvas.height * 0.034;
     const topFont = `600 ${topFs}px monospace`;
     ctx.font         = topFont;
@@ -1408,9 +1420,9 @@ const CAPTIONS = (() => {
     const bigW    = ctx.measureText(bigText).width;
 
     // Context words above (words before active)
-    const aboveText = seg.words.slice(0, ai).map(w => w.word).join(' ');
+    const aboveText = seg.words.slice(0, ai).map(w => formatWord(w.word)).join(' ');
     // Context words below (words after active)
-    const belowText = seg.words.slice(ai + 1).map(w => w.word).join(' ');
+    const belowText = seg.words.slice(ai + 1).map(w => formatWord(w.word)).join(' ');
 
     ctx.font = smFont;
     const aboveW = ctx.measureText(aboveText).width;
@@ -1499,17 +1511,17 @@ const CAPTIONS = (() => {
       ctx.font = active ? boldFont : normFont;
       const chunkW = ctx.measureText(chunk).width;
 
-      ctx.shadowColor = 'rgba(0,0,0,0.7)';
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.7)");;
       ctx.shadowBlur  = active ? 0 : 5;
 
       if (active) {
         ctx.fillStyle = '#FF8C00'; // orange
       } else {
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = getStyle('primary', '#FFFFFF');
       }
 
       ctx.fillText(chunk, x, baseY);
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       x += chunkW;
     });
   }
@@ -1541,8 +1553,8 @@ const CAPTIONS = (() => {
     const activeW    = ctx.measureText(activeText).width;
 
     ctx.font = smFont;
-    const leftWords  = seg.words.slice(0, ai).map(w => w.word.toUpperCase()).join('  ');
-    const rightWords = seg.words.slice(ai + 1).map(w => w.word.toUpperCase()).join('  ');
+    const leftWords  = seg.words.slice(0, ai).map(w => formatWord(w.word)).join('  ');
+    const rightWords = seg.words.slice(ai + 1).map(w => formatWord(w.word)).join('  ');
     const leftW  = leftWords  ? ctx.measureText(leftWords  + '  ').width : 0;
     const rightW = rightWords ? ctx.measureText('  ' + rightWords).width : 0;
 
@@ -1554,22 +1566,22 @@ const CAPTIONS = (() => {
     if (leftWords) {
       ctx.font      = smFont;
       ctx.fillStyle = 'rgba(255,255,255,0.8)';
-      ctx.shadowColor = 'rgba(0,0,0,0.6)';
-      ctx.shadowBlur  = 5;
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.6)");;
+      ctx.shadowBlur = 5 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.fillText(leftWords, x, baseY + (bigFs - smFs) * 0.45);
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       x += leftW + gap;
     }
 
     // ── Active word (magenta) ──
     ctx.font = bigFont;
     // Glow
-    ctx.shadowColor = 'rgba(180,0,255,0.45)';
-    ctx.shadowBlur  = 20;
+    ctx.shadowColor = getStyle('stroke', "rgba(180,0,255,0.45)");;
+    ctx.shadowBlur = 20 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     ctx.fillStyle   = '#CC44FF';
     ctx.fillText(activeText, x, baseY);
     // Draw again sharper on top
-    ctx.shadowBlur  = 0;
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     ctx.fillStyle   = '#DD55FF';
     ctx.fillText(activeText, x, baseY);
     x += activeW + gap;
@@ -1578,10 +1590,10 @@ const CAPTIONS = (() => {
     if (rightWords) {
       ctx.font      = smFont;
       ctx.fillStyle = 'rgba(255,255,255,0.8)';
-      ctx.shadowColor = 'rgba(0,0,0,0.6)';
-      ctx.shadowBlur  = 5;
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.6)");;
+      ctx.shadowBlur = 5 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.fillText(rightWords, x, baseY + (bigFs - smFs) * 0.45);
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     }
   }
 
@@ -1606,18 +1618,18 @@ const CAPTIONS = (() => {
     let   baseY = canvas.height * 0.78 - (lines.length - 1) * lh * 0.5;
 
     lines.forEach(lineWords => {
-      const lineStr = lineWords.map(w => w.word.toUpperCase()).join(' ');
+      const lineStr = lineWords.map(w => formatWord(w.word)).join(' ');
       const lineW   = ctx.measureText(lineStr).width;
 
       // Very subtle shadow for readability on any background
-      ctx.shadowColor   = 'rgba(0,0,0,0.55)';
-      ctx.shadowBlur    = 4;
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.55)");;
+      ctx.shadowBlur = 4 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 2;
       ctx.fillStyle     = '#FFFFFF';
       ctx.font          = font;
       ctx.fillText(lineStr, (canvas.width - lineW) / 2, baseY);
-      ctx.shadowBlur    = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.shadowOffsetY = 0;
 
       baseY += lh;
@@ -1626,7 +1638,440 @@ const CAPTIONS = (() => {
 
 
 
+    // ── BATCH 7 - DYNAMIC TEMPLATES (Aesthetic Layouts) ─────────────────────────────────
+
+  function aestheticShorter(ctx, canvas, words, t) {
+    clearCanvas(ctx, canvas);
+    const seg = getActiveSegment(window.__SUBZFREE_SEGMENTS__ || [], t);
+    if (!seg) return;
+
+    let ai = seg.words.findIndex(w => t >= w.start && t <= w.end + 0.05);
+    if (ai < 0) ai = 0;
+    
+    const aboveText = seg.words.slice(0, ai).map(w => formatWord(w.word)).join(' ');
+    const activeWord = formatWord(seg.words[ai].word);
+    const belowText = seg.words.slice(ai + 1).map(w => formatWord(w.word)).join(' ');
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.78;
+
+    const smFs   = canvas.height * 0.035;
+    const heroFs = canvas.height * 0.11;
+    const smFont   = `700 ${smFs}px 'Inter', sans-serif`;
+    const heroFont = `900 ${heroFs}px 'Inter', sans-serif`;
+
+    const heroY = cy;
+    const topY  = heroY - heroFs * 0.9;
+    const botY  = heroY + smFs * 1.6;
+
+    if (aboveText) {
+      ctx.font = smFont;
+      const aw = ctx.measureText(aboveText).width;
+      ctx.fillStyle = getStyle('primary', '#FFFFFF');
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.8)");; ctx.shadowBlur = 6 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+      ctx.fillText(aboveText, cx - aw / 2, topY);
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+    }
+
+    ctx.font = heroFont;
+    const hw = ctx.measureText(activeWord).width;
+    ctx.fillStyle = getStyle('active', '#00F5FF');
+    ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.9)");; ctx.shadowBlur = 10 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+    ctx.fillText(activeWord, cx - hw / 2, heroY);
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+
+    if (belowText) {
+      ctx.font = smFont;
+      const bw = ctx.measureText(belowText).width;
+      ctx.fillStyle = getStyle('active', '#FFD700');
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.8)");; ctx.shadowBlur = 6 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+      ctx.fillText(belowText, cx - bw / 2, botY);
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+    }
+  }
+
+  function opportunityStarts(ctx, canvas, words, t) {
+    clearCanvas(ctx, canvas);
+    const seg = getActiveSegment(window.__SUBZFREE_SEGMENTS__ || [], t);
+    if (!seg) return;
+
+    let ai = seg.words.findIndex(w => t >= w.start && t <= w.end + 0.05);
+    if (ai < 0) ai = 0;
+
+    const fs = canvas.height * 0.055;
+    const font = `800 ${fs}px 'Inter', sans-serif`;
+    ctx.font = font;
+
+    const cx = canvas.width / 2;
+    const baseY = canvas.height * 0.8;
+    const maxW = canvas.width * 0.85;
+
+    const lines = wrapWords(ctx, seg.words, maxW, font);
+    const lh = fs * 1.3;
+    let y = baseY - (lines.length - 1) * lh * 0.5;
+
+    lines.forEach(lineWords => {
+      const lineStr = lineWords.map(w => formatWord(w.word)).join(' ');
+      const lineW = ctx.measureText(lineStr).width;
+      let x = cx - lineW / 2;
+
+      lineWords.forEach((w, i) => {
+        const wText = w.word + (i < lineWords.length - 1 ? ' ' : '');
+        const wW = ctx.measureText(wText).width;
+        const active = t >= w.start && t <= w.end + 0.05;
+
+        ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.8)");;
+        ctx.shadowBlur = 6 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+        if (active) {
+          ctx.fillStyle = getStyle('active', '#FFD700');
+          ctx.font = `900 ${fs * 1.1}px 'Inter', sans-serif`;
+          ctx.fillText(wText, x, y);
+          ctx.font = font;
+        } else {
+          ctx.fillStyle = getStyle('active', '#00F5FF');
+          if (i % 2 === 0) ctx.fillStyle = getStyle('primary', '#FFFFFF');
+          ctx.fillText(wText, x, y);
+        }
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+        x += wW;
+      });
+      y += lh;
+    });
+  }
+
+  function logicBehindIt(ctx, canvas, words, t) {
+    clearCanvas(ctx, canvas);
+    const seg = getActiveSegment(window.__SUBZFREE_SEGMENTS__ || [], t);
+    if (!seg) return;
+    
+    let ai = seg.words.findIndex(w => t >= w.start && t <= w.end + 0.05);
+    if (ai < 0) ai = 0;
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.8;
+
+    const smFs = canvas.height * 0.035;
+    const heroFs = canvas.height * 0.07;
+    
+    const smFont = `700 ${smFs}px 'Inter', sans-serif`;
+    const heroFont = `italic 700 ${heroFs}px 'Georgia', serif`;
+
+    const aboveText = seg.words.slice(0, ai).map(w => formatWord(w.word)).join(' ');
+    const activeWord = formatWord(seg.words[ai].word);
+    const belowText = seg.words.slice(ai + 1).map(w => formatWord(w.word)).join(' ');
+
+    const topY = cy - heroFs * 0.8;
+    const heroY = cy;
+    const botY = cy + smFs * 1.5;
+
+    ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.9)");;
+    ctx.shadowBlur = 8 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+
+    if (aboveText) {
+      ctx.font = smFont;
+      const aw = ctx.measureText(aboveText).width;
+      ctx.fillStyle = getStyle('active', '#00F5FF');
+      ctx.fillText(aboveText, cx - aw / 2, topY);
+    }
+
+    ctx.font = heroFont;
+    const hw = ctx.measureText(activeWord).width;
+    ctx.fillStyle = '#D4FF00';
+    ctx.fillText(activeWord, cx - hw / 2, heroY);
+
+    if (belowText) {
+      ctx.font = smFont;
+      const bw = ctx.measureText(belowText).width;
+      ctx.fillStyle = getStyle('primary', '#FFFFFF');
+      ctx.fillText(belowText, cx - bw / 2, botY);
+    }
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+  }
+
+  function cyanCenterPop(ctx, canvas, words, t) {
+    clearCanvas(ctx, canvas);
+    const seg = getActiveSegment(window.__SUBZFREE_SEGMENTS__ || [], t);
+    if (!seg) return;
+
+    let ai = seg.words.findIndex(w => t >= w.start && t <= w.end + 0.05);
+    if (ai < 0) ai = 0;
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.78;
+
+    const smFs = canvas.height * 0.04;
+    const heroFs = canvas.height * 0.09;
+    const fontStr = getStyle('font', `'Montserrat', 'Inter', sans-serif`);
+
+    const aboveText = seg.words.slice(0, ai).map(w => formatWord(w.word)).join(' ');
+    const activeWord = formatWord(seg.words[ai].word);
+    const belowText = seg.words.slice(ai + 1).map(w => formatWord(w.word)).join(' ');
+
+    ctx.font = `600 ${smFs}px ${fontStr}`;
+    const aw = ctx.measureText(aboveText ? aboveText + ' ' : '').width;
+    const bw = ctx.measureText(belowText ? ' ' + belowText : '').width;
+    ctx.font = `900 ${heroFs}px ${fontStr}`;
+    const hw = ctx.measureText(activeWord).width;
+
+    const totalW = aw + hw + bw;
+    let startX = cx - totalW / 2;
+
+    ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.8)");;
+    ctx.shadowBlur = 8 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+
+    ctx.font = `600 ${smFs}px ${fontStr}`;
+    ctx.fillStyle = getStyle('active', '#FFD700');
+    if (aboveText) {
+      ctx.fillText(aboveText + ' ', startX, cy);
+      startX += aw;
+    }
+
+    ctx.font = `900 ${heroFs}px ${fontStr}`;
+    ctx.fillStyle = getStyle('active', '#00F5FF');
+    ctx.fillText(activeWord, startX, cy);
+    startX += hw;
+
+    ctx.font = `600 ${smFs}px ${fontStr}`;
+    ctx.fillStyle = getStyle('primary', '#FFFFFF');
+    if (belowText) {
+      ctx.fillText(' ' + belowText, startX, cy);
+    }
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+  }
+
+  function nobodyTalks(ctx, canvas, words, t) {
+    clearCanvas(ctx, canvas);
+    const seg = getActiveSegment(window.__SUBZFREE_SEGMENTS__ || [], t);
+    if (!seg) return;
+
+    let ai = seg.words.findIndex(w => t >= w.start && t <= w.end + 0.05);
+    if (ai < 0) ai = 0;
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.82;
+
+    const smFs = canvas.height * 0.03;
+    const heroFs = canvas.height * 0.1;
+    const fontStr = getStyle('font', `'Space Grotesk', sans-serif`);
+
+    const activeWord = formatWord(seg.words[ai].word);
+    const contextText = seg.words.filter((_, i) => i !== ai).map(w => formatWord(w.word)).join(' ');
+
+    ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.9)");;
+    ctx.shadowBlur = 8 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+
+    ctx.font = `600 ${smFs}px ${fontStr}`;
+    const tw = ctx.measureText(contextText).width;
+    ctx.fillStyle = getStyle('primary', '#FFFFFF');
+    ctx.fillText(contextText, cx - tw / 2, cy - heroFs * 0.85);
+
+    ctx.font = `900 ${heroFs}px ${fontStr}`;
+    const hw = ctx.measureText(activeWord).width;
+    ctx.fillStyle = getStyle('active', '#00F5FF');
+    ctx.fillText(activeWord, cx - hw / 2, cy);
+
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+  }
+
+  function artificialIntelligence(ctx, canvas, words, t) {
+    aestheticShorter(ctx, canvas, words, t);
+  }
+
+  function redWrongPlace(ctx, canvas, words, t) {
+    clearCanvas(ctx, canvas);
+    const seg = getActiveSegment(window.__SUBZFREE_SEGMENTS__ || [], t);
+    if (!seg) return;
+
+    let ai = seg.words.findIndex(w => t >= w.start && t <= w.end + 0.05);
+    if (ai < 0) ai = 0;
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.8;
+
+    const smFs = canvas.height * 0.045;
+    const heroFs = canvas.height * 0.08;
+    const fontStr = getStyle('font', `'Inter', sans-serif`);
+
+    const aboveText = seg.words.slice(0, ai).map(w => formatWord(w.word)).join(' ');
+    const activeWord = formatWord(seg.words[ai].word);
+    const belowText = seg.words.slice(ai + 1).map(w => formatWord(w.word)).join(' ');
+
+    ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.9)");;
+    ctx.shadowBlur = 8 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+
+    ctx.font = `700 ${smFs}px ${fontStr}`;
+    const aw = ctx.measureText(aboveText ? aboveText + ' ' : '').width;
+    ctx.font = `900 ${heroFs}px ${fontStr}`;
+    const hw = ctx.measureText(activeWord).width;
+    ctx.font = `700 ${smFs}px ${fontStr}`;
+    const bw = ctx.measureText(belowText ? ' ' + belowText : '').width;
+
+    const totalW = aw + hw + bw;
+    let startX = cx - totalW / 2;
+    
+    ctx.fillStyle = getStyle('active', '#00F5FF');
+    if (aboveText) {
+      ctx.fillText(aboveText + ' ', startX, cy);
+      startX += aw;
+    }
+    ctx.font = `900 ${heroFs}px ${fontStr}`;
+    ctx.fillStyle = getStyle('primary', '#FFFFFF');
+    ctx.fillText(activeWord, startX, cy);
+    startX += hw;
+    ctx.font = `700 ${smFs}px ${fontStr}`;
+    ctx.fillStyle = '#FF2E2E';
+    if (belowText) {
+      ctx.fillText(' ' + belowText, startX, cy);
+    }
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+  }
+
+  function serifNumbers(ctx, canvas, words, t) {
+    clearCanvas(ctx, canvas);
+    const seg = getActiveSegment(window.__SUBZFREE_SEGMENTS__ || [], t);
+    if (!seg) return;
+
+    let ai = seg.words.findIndex(w => t >= w.start && t <= w.end + 0.05);
+    if (ai < 0) ai = 0;
+
+    const activeWord = formatWord(seg.words[ai].word);
+    const restText = seg.words.filter((_, i) => i !== ai).map(w => formatWord(w.word)).join(' ');
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.8;
+
+    const heroFs = canvas.height * 0.13;
+    const smFs = canvas.height * 0.035;
+
+    ctx.font = `italic 700 ${heroFs}px 'Playfair Display', 'Georgia', serif`;
+    const hw = ctx.measureText(activeWord).width;
+
+    ctx.font = `600 ${smFs}px 'Inter', sans-serif`;
+    const sw = ctx.measureText(' ' + restText).width;
+
+    const totalW = hw + sw;
+    let startX = cx - totalW / 2;
+
+    ctx.font = `italic 700 ${heroFs}px 'Playfair Display', 'Georgia', serif`;
+    ctx.shadowColor = getStyle('stroke', "rgba(255, 255, 255, 0.8)");;
+    ctx.shadowBlur = 15 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+    ctx.fillStyle = getStyle('primary', '#FFFFFF');
+    ctx.fillText(activeWord, startX, cy);
+    startX += hw;
+
+    ctx.shadowBlur = 8 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+    ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.9)");;
+    ctx.font = `600 ${smFs}px 'Inter', sans-serif`;
+    ctx.fillStyle = getStyle('active', '#00F5FF');
+    ctx.fillText(' ' + restText, startX, cy);
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+  }
+
+  function beginnersMiss(ctx, canvas, words, t) {
+    clearCanvas(ctx, canvas);
+    const seg = getActiveSegment(window.__SUBZFREE_SEGMENTS__ || [], t);
+    if (!seg) return;
+
+    let ai = seg.words.findIndex(w => t >= w.start && t <= w.end + 0.05);
+    if (ai < 0) ai = 0;
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.78;
+
+    const smFs = canvas.height * 0.04;
+    const heroFs = canvas.height * 0.09;
+    const fontStr = getStyle('font', `'Inter', sans-serif`);
+
+    const aboveText = seg.words.slice(0, ai).map(w => formatWord(w.word)).join(' ');
+    const activeWord = formatWord(seg.words[ai].word);
+    const belowText = seg.words.slice(ai + 1).map(w => formatWord(w.word)).join(' ');
+
+    const topY = cy - heroFs * 0.8;
+    const heroY = cy;
+    const botY = cy + smFs * 1.5;
+
+    ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.9)");;
+    ctx.shadowBlur = 8 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+
+    const startX = cx - canvas.width * 0.3;
+
+    ctx.font = `700 ${smFs}px ${fontStr}`;
+    ctx.fillStyle = getStyle('active', '#00F5FF');
+    if (aboveText) ctx.fillText(aboveText, startX, topY);
+
+    ctx.font = `900 ${heroFs}px ${fontStr}`;
+    ctx.fillStyle = getStyle('active', '#FFD700');
+    ctx.fillText(activeWord, startX + canvas.width * 0.1, heroY);
+
+    ctx.font = `700 ${smFs}px ${fontStr}`;
+    ctx.fillStyle = getStyle('primary', '#FFFFFF');
+    if (belowText) ctx.fillText(belowText, startX + canvas.width * 0.15, botY);
+
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+  }
+
+  function missingPart(ctx, canvas, words, t) {
+    clearCanvas(ctx, canvas);
+    const seg = getActiveSegment(window.__SUBZFREE_SEGMENTS__ || [], t);
+    if (!seg) return;
+
+    let ai = seg.words.findIndex(w => t >= w.start && t <= w.end + 0.05);
+    if (ai < 0) ai = 0;
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.78;
+
+    const smFs = canvas.height * 0.035;
+    const heroFs = canvas.height * 0.08;
+    const fontStr = getStyle('font', `'Inter', sans-serif`);
+
+    const aboveText = seg.words.slice(0, ai).map(w => formatWord(w.word)).join(' ');
+    const activeWord = formatWord(seg.words[ai].word);
+    const belowText = seg.words.slice(ai + 1).map(w => formatWord(w.word)).join(' ');
+
+    const topY = cy - heroFs * 0.8;
+    const heroY = cy;
+    const botY = cy + smFs * 1.5;
+
+    ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.9)");;
+    ctx.shadowBlur = 8 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+
+    const endX = cx + canvas.width * 0.3;
+
+    ctx.font = `700 ${smFs}px ${fontStr}`;
+    ctx.fillStyle = getStyle('primary', '#FFFFFF');
+    if (aboveText) {
+      const aw = ctx.measureText(aboveText).width;
+      ctx.fillText(aboveText, endX - aw, topY);
+    }
+
+    ctx.font = `900 ${heroFs}px ${fontStr}`;
+    ctx.fillStyle = getStyle('active', '#FFD700');
+    const hw = ctx.measureText(activeWord).width;
+    ctx.fillText(activeWord, endX - hw, heroY);
+
+    ctx.font = `700 ${smFs}px ${fontStr}`;
+    ctx.fillStyle = getStyle('active', '#00F5FF');
+    if (belowText) {
+      const bw = ctx.measureText(belowText).width;
+      ctx.fillText(belowText, endX - bw, botY);
+    }
+
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+  }
+
+
   const STYLES = {
+    'aesthetic-shorter': aestheticShorter,
+    'opportunity-starts': opportunityStarts,
+    'logic-behind-it': logicBehindIt,
+    'cyan-center-pop': cyanCenterPop,
+    'nobody-talks': nobodyTalks,
+    'artificial-intelligence': artificialIntelligence,
+    'red-wrong-place': redWrongPlace,
+    'serif-numbers': serifNumbers,
+    'beginners-miss': beginnersMiss,
+    'missing-part': missingPart,
     'hormozi':       hormozi,
     'word-pop':      wordPop,
     'bubble':        bubble,
@@ -1725,8 +2170,8 @@ const CAPTIONS = (() => {
     const activeW    = ctx.measureText(activeText).width;
 
     ctx.font = smFont;
-    const leftText  = seg.words.slice(0, ai).map(w => w.word.toUpperCase()).join(' ');
-    const rightText = seg.words.slice(ai + 1).map(w => w.word.toUpperCase()).join(' ');
+    const leftText  = seg.words.slice(0, ai).map(w => formatWord(w.word)).join(' ');
+    const rightText = seg.words.slice(ai + 1).map(w => formatWord(w.word)).join(' ');
     const leftW  = leftText  ? ctx.measureText(leftText).width  : 0;
     const rightW = rightText ? ctx.measureText(rightText).width : 0;
 
@@ -1738,29 +2183,29 @@ const CAPTIONS = (() => {
     if (leftText) {
       ctx.font      = smFont;
       ctx.fillStyle = 'rgba(255,255,255,0.82)';
-      ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 5;
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.7)");; ctx.shadowBlur = 5 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.fillText(leftText, x, baseY + (bigFs - smFs) * 0.48);
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       x += leftW + gap;
     }
 
     // Center active word — yellow + shadow
     ctx.font = bigFont;
-    ctx.shadowColor = 'rgba(0,0,0,0.7)';
-    ctx.shadowBlur  = 8;
+    ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.7)");;
+    ctx.shadowBlur = 8 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     ctx.shadowOffsetY = 3;
-    ctx.fillStyle = '#FFD700';
+    ctx.fillStyle = getStyle('active', '#FFD700');
     ctx.fillText(activeText, x, baseY);
-    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2; ctx.shadowOffsetY = 0;
     x += activeW + gap;
 
     // Right small words
     if (rightText) {
       ctx.font      = smFont;
       ctx.fillStyle = 'rgba(255,255,255,0.82)';
-      ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 5;
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.7)");; ctx.shadowBlur = 5 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.fillText(rightText, x, baseY + (bigFs - smFs) * 0.48);
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     }
   }
 
@@ -1786,8 +2231,8 @@ const CAPTIONS = (() => {
     const smFont  = `400 italic ${smFs}px 'Inter', sans-serif`;
 
     // Context text
-    const aboveText = seg.words.slice(0, ai).map(w => w.word).join(' ');
-    const belowText = seg.words.slice(ai + 1).map(w => w.word).join(' ');
+    const aboveText = seg.words.slice(0, ai).map(w => formatWord(w.word)).join(' ');
+    const belowText = seg.words.slice(ai + 1).map(w => formatWord(w.word)).join(' ');
 
     // Measure pill size
     ctx.font = bigFont;
@@ -1828,9 +2273,9 @@ const CAPTIONS = (() => {
       ctx.font = smFont;
       const aw = ctx.measureText(aboveText).width;
       ctx.fillStyle   = 'rgba(220,220,220,0.55)';
-      ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 4;
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.6)");; ctx.shadowBlur = 4 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.fillText(aboveText, cx - aw / 2, pillY - smFs * 0.5);
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     }
 
     // ── Context below ──
@@ -1838,9 +2283,9 @@ const CAPTIONS = (() => {
       ctx.font = smFont;
       const bw = ctx.measureText(belowText).width;
       ctx.fillStyle   = 'rgba(220,220,220,0.55)';
-      ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 4;
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.6)");; ctx.shadowBlur = 4 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.fillText(belowText, cx - bw / 2, pillY + pillH + smFs * 1.2);
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     }
   }
 
@@ -1870,8 +2315,8 @@ const CAPTIONS = (() => {
     const activeW    = ctx.measureText(activeText).width;
 
     ctx.font = smFont;
-    const leftText  = seg.words.slice(0, ai).map(w => w.word.toUpperCase()).join(' ');
-    const rightText = seg.words.slice(ai + 1).map(w => w.word.toUpperCase()).join(' ');
+    const leftText  = seg.words.slice(0, ai).map(w => formatWord(w.word)).join(' ');
+    const rightText = seg.words.slice(ai + 1).map(w => formatWord(w.word)).join(' ');
     const leftW  = leftText  ? ctx.measureText(leftText).width  : 0;
     const rightW = rightText ? ctx.measureText(rightText).width : 0;
 
@@ -1897,7 +2342,7 @@ const CAPTIONS = (() => {
     ctx.lineWidth   = bigFs * 0.14;
     ctx.lineJoin    = 'round';
     ctx.strokeText(activeText, x, baseY);
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = getStyle('primary', '#FFFFFF');
     ctx.fillText(activeText, x, baseY);
     x += activeW + gap;
 
@@ -1946,14 +2391,14 @@ const CAPTIONS = (() => {
       let ly = baseY - (lines.length - 1) * lh * 0.5;
 
       lines.forEach(lineWords => {
-        const lineStr = lineWords.map(w => w.word.toUpperCase()).join(' ');
+        const lineStr = lineWords.map(w => formatWord(w.word)).join(' ');
         const lineW   = ctx.measureText(lineStr).width;
         ctx.fillStyle   = '#7CFC00';
-        ctx.shadowColor = 'rgba(0,80,0,0.5)';
-        ctx.shadowBlur  = 6;
+        ctx.shadowColor = getStyle('stroke', "rgba(0,80,0,0.5)");;
+        ctx.shadowBlur = 6 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         ctx.font = normFont;
         ctx.fillText(lineStr, (canvas.width - lineW) / 2, ly);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         ly += lh;
       });
       return;
@@ -1964,18 +2409,18 @@ const CAPTIONS = (() => {
     seg.words.forEach((w, i) => {
       const active  = t >= w.start && t <= w.end + 0.05;
       ctx.font = active ? activeFont : normFont;
-      const chunk  = w.word.toUpperCase() + (i < seg.words.length - 1 ? ' ' : '');
+      const chunk  = formatWord(w.word) + (i < seg.words.length - 1 ? ' ' : '');
       const chunkW = ctx.measureText(chunk).width;
 
       const vertOff = active ? -(fs * (activeScale - 1) * 0.5) : 0;
 
       if (active) {
-        ctx.shadowColor = 'rgba(100,255,0,0.5)';
-        ctx.shadowBlur  = 12;
+        ctx.shadowColor = getStyle('stroke', "rgba(100,255,0,0.5)");;
+        ctx.shadowBlur = 12 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       }
       ctx.fillStyle = '#7CFC00';
       ctx.fillText(chunk, x, baseY + vertOff);
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       x += chunkW;
     });
   }
@@ -2041,12 +2486,12 @@ const CAPTIONS = (() => {
         ctx.fillText(m.text, pillX + padX, baseY);
         x += pillW + gap;
       } else {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.shadowColor = 'rgba(0,0,0,0.7)';
-        ctx.shadowBlur = 6;
+        ctx.fillStyle = getStyle('primary', '#FFFFFF');
+        ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.7)");;
+        ctx.shadowBlur = 6 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         ctx.font = font;
         ctx.fillText(m.text, x, baseY);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         x += m.blockW + gap;
       }
     });
@@ -2087,11 +2532,11 @@ const CAPTIONS = (() => {
     ctx.fillText(text, tx - 2, ty);
 
     // Main sharp white text
-    ctx.fillStyle = '#FFFFFF';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-    ctx.shadowBlur = 10;
+    ctx.fillStyle = getStyle('primary', '#FFFFFF');
+    ctx.shadowColor = getStyle('stroke', "rgba(0, 0, 0, 0.6)");;
+    ctx.shadowBlur = 10 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     ctx.fillText(text, tx, ty);
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
   }
 
   /**
@@ -2163,14 +2608,14 @@ const CAPTIONS = (() => {
         // Crisp white inner pill
         const wpx = curX;
         const wpy = cy - whitePillH / 2;
-        ctx.fillStyle = '#FFFFFF';
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
-        ctx.shadowBlur = 8;
+        ctx.fillStyle = getStyle('primary', '#FFFFFF');
+        ctx.shadowColor = getStyle('stroke', "rgba(0, 0, 0, 0.35)");;
+        ctx.shadowBlur = 8 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         ctx.beginPath();
         if (ctx.roundRect) ctx.roundRect(wpx, wpy, it.bw, whitePillH, whitePillR);
         else ctx.rect(wpx, wpy, it.bw, whitePillH);
         ctx.fill();
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
 
         // Solid black text
         ctx.fillStyle = '#0F1117';
@@ -2219,8 +2664,8 @@ const CAPTIONS = (() => {
       bottomWords = [topWords.pop()];
     }
 
-    const topText = topWords.map(w => w.word.toUpperCase()).join(' ');
-    const botText = bottomWords.map(w => w.word).join(' ');
+    const topText = topWords.map(w => formatWord(w.word)).join(' ');
+    const botText = bottomWords.map(w => formatWord(w.word)).join(' ');
 
     const topFs = canvas.height * 0.072;
     const botFs = canvas.height * 0.088;
@@ -2236,17 +2681,17 @@ const CAPTIONS = (() => {
     const topX = cx - topW / 2;
 
     // Neon glow layers
-    ctx.shadowColor = 'rgba(255, 20, 50, 0.95)';
-    ctx.shadowBlur = 18;
+    ctx.shadowColor = getStyle('stroke', "rgba(255, 20, 50, 0.95)");;
+    ctx.shadowBlur = 18 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     ctx.fillStyle = '#FF2438';
     ctx.fillText(topText, topX, topY);
     ctx.fillText(topText, topX, topY);
 
     // Inner bright core
-    ctx.shadowBlur = 4;
+    ctx.shadowBlur = 4 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     ctx.fillStyle = '#FF8590';
     ctx.fillText(topText, topX, topY);
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
 
     // ── 2. Bottom row: Stylized Script White + Warm Rim ──
     ctx.font = botFont;
@@ -2254,8 +2699,8 @@ const CAPTIONS = (() => {
     const botX = cx - botW / 2;
 
     // Warm aura
-    ctx.shadowColor = 'rgba(255, 120, 40, 0.6)';
-    ctx.shadowBlur = 12;
+    ctx.shadowColor = getStyle('stroke', "rgba(255, 120, 40, 0.6)");;
+    ctx.shadowBlur = 12 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
 
     // Subtle outline
     ctx.strokeStyle = 'rgba(10, 10, 10, 0.8)';
@@ -2263,9 +2708,9 @@ const CAPTIONS = (() => {
     ctx.strokeText(botText, botX, botY);
 
     // Bright white fill
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = getStyle('primary', '#FFFFFF');
     ctx.fillText(botText, botX, botY);
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
   }
 
   // ════════════════════════════════════════════════════════════
@@ -2394,7 +2839,7 @@ const CAPTIONS = (() => {
 
       // 2. Red Scribble Circle around Active Word
       if (it.isAct) {
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = getStyle('primary', '#FFFFFF');
         ctx.fillText(it.text, x, baseY);
 
         const rx = it.tw / 2 + fs * 0.32;
@@ -2441,26 +2886,26 @@ const CAPTIONS = (() => {
     const bgText = (activeWord ? activeWord.word : seg.words[0].word).toUpperCase();
     const bgW = ctx.measureText(bgText).width;
 
-    ctx.shadowColor = 'rgba(220, 30, 45, 0.55)';
-    ctx.shadowBlur = 20;
+    ctx.shadowColor = getStyle('stroke', "rgba(220, 30, 45, 0.55)");;
+    ctx.shadowBlur = 20 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     ctx.fillStyle = '#B82833';
     ctx.fillText(bgText, cx - bgW / 2, cy + bigFs * 0.32);
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
 
     // 2. Foreground Sentence
     const fgFs = canvas.height * 0.06;
     ctx.font = `700 ${fgFs}px 'Playfair Display', 'Space Grotesk', serif`;
 
-    const fullStr = seg.words.map(w => w.word).join(' ');
+    const fullStr = seg.words.map(w => formatWord(w.word)).join(' ');
     const fgW = ctx.measureText(fullStr).width;
     const fgX = cx - fgW / 2;
     const fgY = cy + fgFs * 0.28;
 
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-    ctx.shadowBlur = 10;
-    ctx.fillStyle = '#FFFFFF';
+    ctx.shadowColor = getStyle('stroke', "rgba(0, 0, 0, 0.9)");;
+    ctx.shadowBlur = 10 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+    ctx.fillStyle = getStyle('primary', '#FFFFFF');
     ctx.fillText(fullStr, fgX, fgY);
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
   }
 
   /**
@@ -2495,8 +2940,8 @@ const CAPTIONS = (() => {
       botWords = [topWords.pop()];
     }
 
-    const topText = topWords.map(w => w.word.toLowerCase()).join(' ');
-    const botText = botWords.map(w => w.word.toUpperCase()).join(' ');
+    const topText = topWords.map(w => formatWord(w.word).toLowerCase()).join(' ');
+    const botText = botWords.map(w => formatWord(w.word)).join(' ');
 
     const fs = canvas.height * 0.096;
     const font = `900 ${fs}px 'Inter', 'Space Grotesk', Helvetica, Arial, sans-serif`;
@@ -2556,8 +3001,8 @@ const CAPTIONS = (() => {
       botWords = [topWords.pop()];
     }
 
-    const topText = topWords.map(w => w.word).join(' ');
-    const botText = botWords.map(w => w.word.toUpperCase()).join(' ');
+    const topText = topWords.map(w => formatWord(w.word)).join(' ');
+    const botText = botWords.map(w => formatWord(w.word)).join(' ');
 
     const topFs = canvas.height * 0.092;
     const botFs = canvas.height * 0.098;
@@ -2574,11 +3019,11 @@ const CAPTIONS = (() => {
 
     ctx.fillStyle = 'rgba(255, 140, 80, 0.4)';
     ctx.fillText(topText, topX + 1.5, topY);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-    ctx.shadowBlur = 8;
+    ctx.fillStyle = getStyle('primary', '#FFFFFF');
+    ctx.shadowColor = getStyle('stroke', "rgba(0, 0, 0, 0.7)");;
+    ctx.shadowBlur = 8 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     ctx.fillText(topText, topX, topY);
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
 
     // Bottom: Bold Pastel Blue / Cyan Sans ("STATUS")
     ctx.font = botFont;
@@ -2619,8 +3064,8 @@ const CAPTIONS = (() => {
       botWords = [seg.words[lastIdx]];
     }
 
-    const topText = topWords.map(w => w.word.toLowerCase()).join(' ');
-    const botText = botWords.map(w => w.word.toUpperCase()).join(' ');
+    const topText = topWords.map(w => formatWord(w.word).toLowerCase()).join(' ');
+    const botText = botWords.map(w => formatWord(w.word)).join(' ');
 
     const topFs = canvas.height * 0.042;
     const botFs = canvas.height * 0.125;
@@ -2636,7 +3081,7 @@ const CAPTIONS = (() => {
       const topW = ctx.measureText(topText).width;
       ctx.fillStyle = 'rgba(255, 30, 80, 0.4)';
       ctx.fillText(topText, cx - topW / 2 + 1.2, topY);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = getStyle('primary', '#FFFFFF');
       ctx.fillText(topText, cx - topW / 2, topY);
     }
 
@@ -2672,8 +3117,8 @@ const CAPTIONS = (() => {
     const cx = canvas.width / 2;
     const cy = canvas.height * 0.74;
 
-    const aboveText = seg.words.slice(0, ai).map(w => w.word).join(' ');
-    const belowText = seg.words.slice(ai + 1).map(w => w.word).join(' ');
+    const aboveText = seg.words.slice(0, ai).map(w => formatWord(w.word)).join(' ');
+    const belowText = seg.words.slice(ai + 1).map(w => formatWord(w.word)).join(' ');
     const heroText  = activeWord.word;
 
     const smFs = canvas.height * 0.038;
@@ -2691,7 +3136,7 @@ const CAPTIONS = (() => {
       const aw = ctx.measureText(aboveText).width;
       ctx.fillStyle = 'rgba(255, 30, 80, 0.4)';
       ctx.fillText(aboveText, cx - aw / 2 + 1, topY);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = getStyle('primary', '#FFFFFF');
       ctx.fillText(aboveText, cx - aw / 2, topY);
     }
 
@@ -2706,11 +3151,11 @@ const CAPTIONS = (() => {
     ctx.fillStyle = 'rgba(255, 20, 60, 0.7)';
     ctx.fillText(heroText, hx + 3, heroY);
 
-    ctx.fillStyle = '#FFFFFF';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
-    ctx.shadowBlur = 8;
+    ctx.fillStyle = getStyle('primary', '#FFFFFF');
+    ctx.shadowColor = getStyle('stroke', "rgba(0, 0, 0, 0.75)");;
+    ctx.shadowBlur = 8 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     ctx.fillText(heroText, hx, heroY);
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
 
     // 3. Bottom context
     if (belowText) {
@@ -2718,7 +3163,7 @@ const CAPTIONS = (() => {
       const bw = ctx.measureText(belowText).width;
       ctx.fillStyle = 'rgba(0, 225, 255, 0.4)';
       ctx.fillText(belowText, cx - bw / 2 - 1, botY);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = getStyle('primary', '#FFFFFF');
       ctx.fillText(belowText, cx - bw / 2, botY);
     }
   }
@@ -2746,8 +3191,8 @@ const CAPTIONS = (() => {
     const cx = canvas.width / 2;
     const cy = canvas.height * 0.74;
 
-    const aboveText = seg.words.slice(0, ai).map(w => w.word).join(' ');
-    const belowText = seg.words.slice(ai + 1).map(w => w.word).join(' ');
+    const aboveText = seg.words.slice(0, ai).map(w => formatWord(w.word)).join(' ');
+    const belowText = seg.words.slice(ai + 1).map(w => formatWord(w.word)).join(' ');
     const heroText  = activeWord.word.toUpperCase();
 
     const smFs   = canvas.height * 0.038;
@@ -2764,9 +3209,9 @@ const CAPTIONS = (() => {
       ctx.font = smFont;
       const aw = ctx.measureText(aboveText).width;
       ctx.fillStyle = 'rgba(170, 180, 200, 0.65)';
-      ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 4;
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.6)");; ctx.shadowBlur = 4 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.fillText(aboveText, cx - aw / 2, topY);
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     }
 
     // 2. Hero Word: Electric Lime Yellow with Crisp Black Shadow
@@ -2785,9 +3230,9 @@ const CAPTIONS = (() => {
       ctx.font = smFont;
       const bw = ctx.measureText(belowText).width;
       ctx.fillStyle = 'rgba(170, 180, 200, 0.65)';
-      ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 4;
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.6)");; ctx.shadowBlur = 4 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.fillText(belowText, cx - bw / 2, botY);
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     }
   }
 
@@ -2810,8 +3255,8 @@ const CAPTIONS = (() => {
     const cx = canvas.width / 2;
     const cy = canvas.height * 0.74;
 
-    const aboveText = seg.words.slice(0, ai).map(w => w.word).join(' ');
-    const belowText = seg.words.slice(ai + 1).map(w => w.word).join(' ');
+    const aboveText = seg.words.slice(0, ai).map(w => formatWord(w.word)).join(' ');
+    const belowText = seg.words.slice(ai + 1).map(w => formatWord(w.word)).join(' ');
     const heroText  = activeWord.word.toUpperCase();
 
     const smFs   = canvas.height * 0.038;
@@ -2828,9 +3273,9 @@ const CAPTIONS = (() => {
       ctx.font = smFont;
       const aw = ctx.measureText(aboveText).width;
       ctx.fillStyle = 'rgba(150, 160, 180, 0.55)';
-      ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 4;
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.6)");; ctx.shadowBlur = 4 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.fillText(aboveText, cx - aw / 2, topY);
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     }
 
     // Hero Word: Metallic White-to-Silver Gradient with Dark Shadow
@@ -2843,21 +3288,21 @@ const CAPTIONS = (() => {
     grad.addColorStop(0.55, '#E8E8E8');
     grad.addColorStop(1, '#949494');
 
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+    ctx.shadowColor = getStyle('stroke', "rgba(0, 0, 0, 0.95)");;
     ctx.shadowOffsetY = 6;
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = 12 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     ctx.fillStyle = grad;
     ctx.fillText(heroText, hx, heroY);
-    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2; ctx.shadowOffsetY = 0;
 
     // Bottom context
     if (belowText) {
       ctx.font = smFont;
       const bw = ctx.measureText(belowText).width;
       ctx.fillStyle = 'rgba(150, 160, 180, 0.55)';
-      ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 4;
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.6)");; ctx.shadowBlur = 4 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.fillText(belowText, cx - bw / 2, botY);
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     }
   }
 
@@ -2879,8 +3324,8 @@ const CAPTIONS = (() => {
     const cx = canvas.width / 2;
     const cy = canvas.height * 0.74;
 
-    const aboveText = seg.words.slice(0, ai).map(w => w.word).join(' ');
-    const belowText = seg.words.slice(ai + 1).map(w => w.word).join(' ');
+    const aboveText = seg.words.slice(0, ai).map(w => formatWord(w.word)).join(' ');
+    const belowText = seg.words.slice(ai + 1).map(w => formatWord(w.word)).join(' ');
     const heroText  = activeWord.word.toUpperCase();
 
     const smFs   = canvas.height * 0.038;
@@ -2897,9 +3342,9 @@ const CAPTIONS = (() => {
       ctx.font = smFont;
       const aw = ctx.measureText(aboveText).width;
       ctx.fillStyle = 'rgba(170, 190, 210, 0.6)';
-      ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 4;
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.6)");; ctx.shadowBlur = 4 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.fillText(aboveText, cx - aw / 2, topY);
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     }
 
     // Hero Word: Neon Lime with Intense Glow Aura
@@ -2908,26 +3353,26 @@ const CAPTIONS = (() => {
     const hx = cx - hw / 2;
 
     // Outer glow aura
-    ctx.shadowColor = 'rgba(140, 255, 0, 0.95)';
-    ctx.shadowBlur = 26;
+    ctx.shadowColor = getStyle('stroke', "rgba(140, 255, 0, 0.95)");;
+    ctx.shadowBlur = 26 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     ctx.fillStyle = '#A6FF00';
     ctx.fillText(heroText, hx, heroY);
     ctx.fillText(heroText, hx, heroY);
 
     // Inner bright core
-    ctx.shadowBlur = 6;
+    ctx.shadowBlur = 6 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     ctx.fillStyle = '#CCFF66';
     ctx.fillText(heroText, hx, heroY);
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
 
     // Bottom context
     if (belowText) {
       ctx.font = smFont;
       const bw = ctx.measureText(belowText).width;
       ctx.fillStyle = 'rgba(170, 190, 210, 0.6)';
-      ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 4;
+      ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.6)");; ctx.shadowBlur = 4 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.fillText(belowText, cx - bw / 2, botY);
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
     }
   }
 
@@ -2958,7 +3403,7 @@ const CAPTIONS = (() => {
 
     const items = seg.words.map((w, idx) => {
       const isAct = idx === ai;
-      const text = w.word.toUpperCase();
+      const text = formatWord(w.word);
       const tw = ctx.measureText(text).width;
       return { text, tw, isAct, word: w };
     });
@@ -2991,18 +3436,18 @@ const CAPTIONS = (() => {
         ctx.strokeText(it.text, x, baseY);
 
         // Vibrant cyan-to-white fill
-        ctx.fillStyle = '#00F5FF';
-        ctx.shadowColor = 'rgba(0, 245, 255, 0.9)';
-        ctx.shadowBlur = 16;
+        ctx.fillStyle = getStyle('active', '#00F5FF');
+        ctx.shadowColor = getStyle('stroke', "rgba(0, 245, 255, 0.9)");;
+        ctx.shadowBlur = 16 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         ctx.fillText(it.text, x, baseY);
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = getStyle('primary', '#FFFFFF');
         ctx.fillText(it.text, x, baseY);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       } else {
         ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
         ctx.lineWidth = fs * 0.12;
         ctx.strokeText(it.text, x, baseY);
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = getStyle('primary', '#FFFFFF');
         ctx.fillText(it.text, x, baseY);
       }
       x += it.tw + gap;
@@ -3032,7 +3477,7 @@ const CAPTIONS = (() => {
 
     const items = seg.words.map((w, idx) => {
       const isAct = idx === ai;
-      const text = w.word.toUpperCase();
+      const text = formatWord(w.word);
       const tw = ctx.measureText(text).width;
       return { text, tw, isAct };
     });
@@ -3049,11 +3494,11 @@ const CAPTIONS = (() => {
         goldG.addColorStop(0.8, '#FFA000');
         goldG.addColorStop(1, '#FF6F00');
 
-        ctx.shadowColor = 'rgba(255, 193, 7, 0.85)';
-        ctx.shadowBlur = 14;
+        ctx.shadowColor = getStyle('stroke', "rgba(255, 193, 7, 0.85)");;
+        ctx.shadowBlur = 14 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         ctx.fillStyle = goldG;
         ctx.fillText(it.text, x, baseY);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
 
         // Sleek golden underline
         const uy = baseY + fs * 0.22;
@@ -3065,9 +3510,9 @@ const CAPTIONS = (() => {
         ctx.stroke();
       } else {
         ctx.fillStyle = 'rgba(185, 195, 215, 0.45)';
-        ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 4;
+        ctx.shadowColor = getStyle('stroke', "rgba(0,0,0,0.6)");; ctx.shadowBlur = 4 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         ctx.fillText(it.text, x, baseY);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       }
       x += it.tw + gap;
     });
@@ -3112,17 +3557,17 @@ const CAPTIONS = (() => {
         grad.addColorStop(0.5, '#7B61FF');
         grad.addColorStop(1, '#FF2E93');
 
-        ctx.shadowColor = 'rgba(123, 97, 255, 0.85)';
-        ctx.shadowBlur = 15;
+        ctx.shadowColor = getStyle('stroke', "rgba(123, 97, 255, 0.85)");;
+        ctx.shadowBlur = 15 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         ctx.fillStyle = grad;
         ctx.fillText(it.text, x, baseY - 2);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       } else {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-        ctx.shadowBlur = 5;
+        ctx.shadowColor = getStyle('stroke', "rgba(0, 0, 0, 0.6)");;
+        ctx.shadowBlur = 5 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
         ctx.fillText(it.text, x, baseY);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0 * getStyle('glow', 1); ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       }
       x += it.tw + gap;
     });
@@ -3163,3 +3608,4 @@ const CAPTIONS = (() => {
 
   return { draw, STYLES: Object.keys(STYLES) };
 })();
+

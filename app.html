@@ -1943,41 +1943,55 @@ window.EXPORT = (() => {
       video.muted = true;
       video.play();
 
-      const fps    = 30;
-      const frameMs = 1000 / fps;
-      let   lastPct = 0;
+      let lastPct = 0;
+      let isRecording = true;
 
-      // Render loop: draw video frame + captions onto offCanvas
-      const renderLoop = setInterval(() => {
-        const ct  = video.currentTime;
+      // Render loop using Hardware-Accelerated requestVideoFrameCallback for ZERO Lag
+      const processFrame = () => {
+        if (!isRecording) return;
+        
+        const ct = video.currentTime;
         const pct = Math.min(95, Math.round((ct / duration) * 90) + 5);
 
         if (pct !== lastPct) {
           lastPct = pct;
-          onProgress(pct, `Rendering frame ${Math.round(ct)}s / ${Math.round(duration)}s`);
+          onProgress(pct, "Rendering frame $(Math.round(ct))s / $(Math.round(duration))s");
         }
 
-        // 1. Draw video frame onto offCanvas
+        // 1. Draw video frame
         offCtx.drawImage(video, 0, 0, w, h);
 
-        // 2. Clear transparent caption layer
+        // 2. Clear caption layer
         captionCtx.clearRect(0, 0, w, h);
 
-        // 3. Draw captions onto transparent layer
+        // 3. Draw captions perfectly synced, parsing global state via window.__SUBZFREE_STATE__
         window.__SUBZFREE_SEGMENTS__ = segments;
         CAPTIONS.draw(styleName, captionCtx, captionCanvas, segments, ct);
 
-        // 4. Composite transparent captions cleanly on top of video frame
+        // 4. Composite
         offCtx.drawImage(captionCanvas, 0, 0, w, h);
 
-        // If video ended
-        if (video.ended || ct >= duration - 0.05) {
-          clearInterval(renderLoop);
+        // Continue loop if not ended
+        if (!video.ended && ct < duration - 0.05) {
+          if ('requestVideoFrameCallback' in video) {
+            video.requestVideoFrameCallback(processFrame);
+          } else {
+            requestAnimationFrame(processFrame);
+          }
+        } else {
+          isRecording = false;
           video.pause();
           recorder.stop();
-          onProgress(100, 'Finalizing...');
+          onProgress(100, 'Finalizing High-Quality Output...');
         }
-      }, frameMs);
+      };
+
+      // Start loop
+      if ('requestVideoFrameCallback' in video) {
+        video.requestVideoFrameCallback(processFrame);
+      } else {
+        requestAnimationFrame(processFrame);
+      }
 
     } catch (err) {
       console.error('Export error:', err);
