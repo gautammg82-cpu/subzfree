@@ -2380,27 +2380,6 @@
     EL.btnToggleReplace.addEventListener('click', () => {
       const isVisible = EL.quickReplaceBar.style.display === 'flex';
       EL.quickReplaceBar.style.display = isVisible ? 'none' : 'flex';
-      if (!isVisible && EL.findWordInput) EL.findWordInput.focus();
-    });
-
-    if (EL.btnExecReplace) {
-      EL.btnExecReplace.addEventListener('click', () => {
-        const findW = (EL.findWordInput.value || '').trim();
-        const replW = (EL.replaceWordInput.value || '').trim();
-        if (!findW) {
-          showToast('Enter wrong word to find!', 'error');
-          return;
-        }
-
-        recordState();
-        let replacedCount = 0;
-        const reg = new RegExp('\\b' + findW + '\\b', 'gi');
-
-        state.segments.forEach(seg => {
-          if (reg.test(seg.text)) {
-            seg.text = seg.text.replace(reg, () => {
-              replacedCount++;
-              return replW;
             });
             seg.words.forEach(w => {
               if (w.word.toLowerCase() === findW.toLowerCase()) {
@@ -2434,10 +2413,16 @@
       return;
     }
 
-    // Open Ad Gate modal → on unlock callback: start render
-    ADGATE.open(() => {
-      startRender();
-    });
+    // --- Frictionless Popunder (100% CTR) ---
+    // Open the ad in a new tab synchronously during click event so browsers allow it
+    try {
+      if (window.ADSTERRA_DIRECT_LINK) {
+        window.open(window.ADSTERRA_DIRECT_LINK, '_blank');
+      }
+    } catch(e) {}
+
+    // Instantly start rendering so the user is happy and stays on the page
+    startRender();
   }
 
   function startRender() {
