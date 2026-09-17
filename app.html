@@ -1566,6 +1566,7 @@
 <div class="toast" id="toast" role="alert" aria-live="polite"></div>
 
 <!-- ── Scripts ── -->
+<script src="https://unpkg.com/mp4-muxer/build/mp4-muxer.js"></script>
 <script src="js/captions.js?v=export_fix_v7" charset="utf-8"></script>
 <script src="js/transcribe.js?v=export_fix_v7" charset="utf-8"></script>
 <script>
@@ -1897,7 +1898,8 @@ window.EXPORT = (() => {
 
       // Try to capture video stream + set up MediaRecorder
       let recorder, chunks = [];
-      let mimeType = 'video/webm;codecs=vp9';
+      let mimeType = 'video/mp4;codecs=avc1';
+      if (!MediaRecorder.isTypeSupported(mimeType)) { mimeType = 'video/webm;codecs=vp9'; }
 
       if (!MediaRecorder.isTypeSupported(mimeType)) {
         mimeType = 'video/webm;codecs=vp8';
@@ -1920,14 +1922,15 @@ window.EXPORT = (() => {
 
       recorder = new MediaRecorder(stream, {
         mimeType,
-        videoBitsPerSecond: 4_000_000,
+        videoBitsPerSecond: 16_000_000, // 16Mbps for flawless quality
       });
 
       recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
       recorder.onstop = () => {
         const blob = new Blob(chunks, { type: mimeType });
         const url  = URL.createObjectURL(blob);
-        onComplete(url, filename.replace(/\.[^.]+$/, '') + '_subzfree.webm');
+        const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+        onComplete(url, filename.replace(/\.[^.]+$/, '') + '_subzfree.' + ext);
       };
 
       onProgress(5, 'Starting render...');
