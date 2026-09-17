@@ -1,167 +1,156 @@
 /**
- * SubzFree — Video Export Engine
- * Renders captions onto video frames using Canvas + MediaRecorder API.
- * No external libraries needed — runs entirely in the browser.
+ * SubzFree - Offline WebCodecs MP4 Export Engine
+ * Guarantees zero dropped frames by rendering frame-by-frame completely offline.
  */
+window.EXPORT = (() => {
 
-const EXPORT = (() => {
+  const waitForSeek = (video) => new Promise((resolve) => {
+    video.addEventListener('seeked', resolve, { once: true });
+  });
 
-  /**
-   * Render captioned video and trigger download.
-   *
-   * @param {HTMLVideoElement} video     - Source video element
-   * @param {HTMLCanvasElement} canvas   - Overlay canvas with captions
-   * @param {Array}  segments            - Caption segments
-   * @param {string} styleName           - Selected caption style
-   * @param {string} filename            - Output filename
-   * @param {Function} onProgress        - Called with (percent, label)
-   * @param {Function} onComplete        - Called when done with blob URL
-   * @param {Function} onError           - Called on error
-   */
+  async function extractAudio(videoFileUrl) {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const response = await fetch(videoFileUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      return await audioCtx.decodeAudioData(arrayBuffer);
+    } catch(e) {
+      console.warn("Audio extraction failed", e);
+      return null;
+    }
+  }
+
   async function render(video, overlayCanvas, segments, styleName, filename, onProgress, onComplete, onError) {
     try {
-      onProgress(0, 'Setting up render...');
+      onProgress(0, 'Initializing Zero-Lag MP4 Engine...');
 
       const duration = video.duration;
-      let w = video.videoWidth  || 1280;
-      let h = video.videoHeight || 720;
+      const w = video.videoWidth || 1280;
+      const h = video.videoHeight || 720;
+      const fps = 30;
+      const totalFrames = Math.floor(duration * fps);
 
-      // Force Target Resolution
-      const resBtn = document.querySelector('.res-btn.active');
-      const targetRes = resBtn ? resBtn.dataset.res : '1080';
-      const isPortrait = h > w;
-      
-      if (targetRes === '4k') {
-        w = isPortrait ? 2160 : 3840;
-        h = isPortrait ? 3840 : 2160;
-      } else if (targetRes === '1080') {
-        w = isPortrait ? 1080 : 1920;
-        h = isPortrait ? 1920 : 1080;
-      } else if (targetRes === '720') {
-        w = isPortrait ? 720 : 1280;
-        h = isPortrait ? 1280 : 720;
-      }
-
-      // Create offscreen canvas for compositing video + captions
+      // Create dedicated canvases
       const offCanvas = document.createElement('canvas');
-      offCanvas.width  = w;
-      offCanvas.height = h;
-      const offCtx = offCanvas.getContext('2d', { alpha: false }); // Massive performance boost!
-
-      // Dedicated transparent canvas for captions to prevent clearRect from erasing video!
+      offCanvas.width = w; offCanvas.height = h;
+      const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+      
       const captionCanvas = document.createElement('canvas');
-      captionCanvas.width  = w;
-      captionCanvas.height = h;
-      const captionCtx = captionCanvas.getContext('2d');
+      captionCanvas.width = w; captionCanvas.height = h;
+      const captionCtx = captionCanvas.getContext('2d', { willReadFrequently: true });
 
-      // Try to capture video stream + set up MediaRecorder
-      let recorder, chunks = [];
-      let mimeType = 'video/mp4;codecs=avc1';
+      // 1. Extract Audio
+      onProgress(2, 'Extracting Audio Track...');
+      const videoSrc = video.querySelector('source') ? video.querySelector('source').src : video.src;
+      let audioBuffer = await extractAudio(videoSrc);
 
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = 'video/webm;codecs=vp9';
-      }
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = 'video/webm;codecs=vp8';
-      }
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = 'video/webm';
-      }
-
-      const stream = offCanvas.captureStream(30);
-
-      // Try to add audio track
-      try {
-        if (video.captureStream) {
-          const vStream = video.captureStream();
-          vStream.getAudioTracks().forEach(track => stream.addTrack(track));
-        }
-      } catch (e) {
-        console.warn('No audio track captured:', e);
-      }
-
-      recorder = new MediaRecorder(stream, {
-        mimeType,
-        videoBitsPerSecond: 15_000_000,
+      // 2. Setup MP4 Muxer
+      const muxer = new Mp4Muxer.Muxer({
+        target: new Mp4Muxer.ArrayBufferTarget(),
+        video: { codec: 'avc', width: w, height: h },
+        audio: audioBuffer ? { codec: 'aac', numberOfChannels: audioBuffer.numberOfChannels, sampleRate: audioBuffer.sampleRate } : undefined,
+        fastStart: 'in-memory'
       });
 
-      recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: mimeType });
-        const url  = URL.createObjectURL(blob);
-        onComplete(url, filename.replace(/\.[^.]+$/, '') + '_subzfree.webm');
-      };
+      // 3. Setup Video Encoder
+      const videoEncoder = new VideoEncoder({
+        output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+        error: (e) => { console.error('VideoEncoder error', e); onError(e); }
+      });
+      videoEncoder.configure({
+        codec: 'avc1.640028', // High Profile
+        width: w,
+        height: h,
+        bitrate: 16_000_000, // 16 Mbps High Quality
+        framerate: fps,
+        hardwareAcceleration: 'prefer-hardware'
+      });
 
-      onProgress(5, 'Starting render...');
+      // 4. Encode Audio (if exists)
+      if (audioBuffer) {
+        onProgress(5, 'Encoding AAC Audio...');
+        const audioEncoder = new AudioEncoder({
+          output: (chunk, meta) => muxer.addAudioChunk(chunk, meta),
+          error: (e) => { console.error('AudioEncoder error', e); onError(e); }
+        });
+        audioEncoder.configure({
+          codec: 'mp4a.40.2',
+          sampleRate: audioBuffer.sampleRate,
+          numberOfChannels: audioBuffer.numberOfChannels,
+          bitrate: 128_000
+        });
 
-      // Seek to start and play
-      video.currentTime = 0;
-      await waitForSeek(video);
+        const sampleRate = audioBuffer.sampleRate;
+        const framesPerChunk = Math.max(1, Math.floor(sampleRate / 10)); // ~100ms chunks to avoid 1024 exact frame limitations on planar extraction
+        // WebCodecs AAC requires planar data 
+        for (let i = 0; i < audioBuffer.length; i += framesPerChunk) {
+            const numFrames = Math.min(framesPerChunk, audioBuffer.length - i);
+            const data = new Float32Array(numFrames * audioBuffer.numberOfChannels);
+            
+            for (let c = 0; c < audioBuffer.numberOfChannels; c++) {
+                data.set(audioBuffer.getChannelData(c).subarray(i, i + numFrames), c * numFrames);
+            }
 
-      recorder.start(100); // collect data every 100ms
-      video.muted = true;
-      video.play();
-
-      const fps    = 30;
-      const frameMs = 1000 / fps;
-      let   lastPct = 0;
-
-      let isRendering = true;
-
-      // The core drawing logic for a single frame
-      function drawFrame() {
-        const ct  = video.currentTime;
-        const pct = Math.min(95, Math.round((ct / duration) * 90) + 5);
-
-        if (pct !== lastPct) {
-          lastPct = pct;
-          onProgress(pct, `Rendering frame ${Math.round(ct)}s / ${Math.round(duration)}s`);
+            const audioData = new AudioData({
+                format: 'f32-planar',
+                sampleRate: sampleRate,
+                numberOfFrames: numFrames,
+                numberOfChannels: audioBuffer.numberOfChannels,
+                timestamp: (i / sampleRate) * 1_000_000,
+                data: data
+            });
+            audioEncoder.encode(audioData);
+            audioData.close();
         }
+        await audioEncoder.flush();
+        audioEncoder.close();
+      }
 
-        // 1. Draw video frame onto offCanvas
+      // 5. Offline Frame Rendering Loop
+      onProgress(15, 'Rendering perfect frames (0% drop rate)...');
+      
+      let currentFrame = 0;
+      video.pause();
+      
+      while (currentFrame < totalFrames) {
+        const ct = currentFrame / fps;
+        video.currentTime = ct;
+        await waitForSeek(video);
+        
+        // Draw Video
         offCtx.drawImage(video, 0, 0, w, h);
-
-        // 2. Clear transparent caption layer
+        
+        // Draw Captions
         captionCtx.clearRect(0, 0, w, h);
-
-        // 3. Draw captions onto transparent layer
         window.__SUBZFREE_SEGMENTS__ = segments;
         CAPTIONS.draw(styleName, captionCtx, captionCanvas, segments, ct);
-
-        // 4. Composite transparent captions cleanly on top of video frame
         offCtx.drawImage(captionCanvas, 0, 0, w, h);
-
-        // If video ended
-        if (video.ended || ct >= duration - 0.05) {
-          isRendering = false;
-          video.pause();
-          recorder.stop();
-          onProgress(100, 'Finalizing...');
+        
+        // Create VideoFrame and Encode
+        const bitmap = await createImageBitmap(offCanvas);
+        const frame = new VideoFrame(bitmap, { timestamp: ct * 1_000_000 });
+        videoEncoder.encode(frame, { keyFrame: currentFrame % (fps * 2) === 0 });
+        frame.close();
+        
+        currentFrame++;
+        
+        // Progress UI every 5 frames
+        if (currentFrame % 5 === 0) {
+            const pct = 15 + Math.round((currentFrame / totalFrames) * 80);
+            onProgress(pct, "Rendering perfectly: Frame $(currentFrame) / $(totalFrames)");
         }
       }
-
-      // 100% Perfectly synced loop (Only draws when a NEW video frame is ready)
-      function renderLoopVFC(now, metadata) {
-        if (!isRendering) return;
-        drawFrame();
-        if (isRendering && 'requestVideoFrameCallback' in video) {
-          video.requestVideoFrameCallback(renderLoopVFC);
-        }
-      }
-
-      // Fallback loop (Draws at monitor refresh rate, e.g. 60fps)
-      function renderLoopRAF() {
-        if (!isRendering) return;
-        requestAnimationFrame(renderLoopRAF);
-        drawFrame();
-      }
-
-      // Start the smartest possible render loop
-      if ('requestVideoFrameCallback' in video) {
-        video.requestVideoFrameCallback(renderLoopVFC);
-      } else {
-        requestAnimationFrame(renderLoopRAF);
-      }
+      
+      onProgress(98, 'Finalizing true MP4 file...');
+      await videoEncoder.flush();
+      videoEncoder.close();
+      muxer.finalize();
+      
+      const buffer = muxer.target.buffer;
+      const blob = new Blob([buffer], { type: 'video/mp4' });
+      const url = URL.createObjectURL(blob);
+      
+      onComplete(url, filename.replace(/\.[^.]+$/, '') + '_subzfree.mp4');
 
     } catch (err) {
       console.error('Export error:', err);
@@ -169,48 +158,5 @@ const EXPORT = (() => {
     }
   }
 
-  function waitForSeek(video) {
-    return new Promise(resolve => {
-      if (Math.abs(video.currentTime) < 0.1) { resolve(); return; }
-      video.onseeked = () => { video.onseeked = null; resolve(); };
-    });
-  }
-
-  /**
-   * Fallback: download as SRT subtitle file
-   */
-  function downloadSRT(segments, filename) {
-    let srt = '';
-    segments.forEach((seg, i) => {
-      const start = formatSRTTime(seg.start);
-      const end   = formatSRTTime(seg.end);
-      srt += `${i + 1}\n${start} --> ${end}\n${seg.text}\n\n`;
-    });
-
-    const blob = new Blob([srt], { type: 'text/plain' });
-    const url  = URL.createObjectURL(blob);
-    triggerDownload(url, filename.replace(/\.[^.]+$/, '') + '_subzfree.srt');
-    URL.revokeObjectURL(url);
-  }
-
-  function formatSRTTime(secs) {
-    const h   = Math.floor(secs / 3600);
-    const m   = Math.floor((secs % 3600) / 60);
-    const s   = Math.floor(secs % 60);
-    const ms  = Math.round((secs % 1) * 1000);
-    return `${pad(h)}:${pad(m)}:${pad(s)},${ms.toString().padStart(3,'0')}`;
-  }
-
-  function pad(n) { return String(n).padStart(2, '0'); }
-
-  function triggerDownload(url, filename) {
-    const a = document.createElement('a');
-    a.href     = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
-
-  return { render, downloadSRT, triggerDownload };
+  return { render };
 })();
